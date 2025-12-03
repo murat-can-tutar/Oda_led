@@ -58,11 +58,11 @@ EEPROM.get(EE_ADDR_BASE, p);
 
 if (p.magic == PERSIST_MAGIC && p.version == PERSIST_VERSION && p.checksum == persistChecksum(p)) {
 
-if (p.absenceMs >= 60000UL && p.absenceMs <= 600000UL) absenceOffMs = p.absenceMs; Serial.println("[EEPROM] Ayarlar yüklendi."); 
+if (p.absenceMs >= 60000UL && p.absenceMs <= 600000UL) absenceOffMs = p.absenceMs; Serial.println("[EEPROM] Ayarlar yüklendi.");
 
 } else {
 
-Serial.println("[EEPROM] Ilk kurulu/geçersiz veri. Varsayılanlar yazılıyor..."); Persist np{PERSIST_MAGIC, PERSIST_VERSION, absenceOffMs, restoreWindowMs, 0}; np.checksum = persistChecksum(np); EEPROM.put(EE_ADDR_BASE, np); EEPROM.commit(); 
+Serial.println("[EEPROM] Ilk kurulu/geçersiz veri. Varsayılanlar yazılıyor..."); Persist np{PERSIST_MAGIC, PERSIST_VERSION, absenceOffMs, restoreWindowMs, 0}; np.checksum = persistChecksum(np); EEPROM.put(EE_ADDR_BASE, np); EEPROM.commit();
 
 }
 
@@ -142,7 +142,7 @@ inline bool isDead(uint8_t x, uint8_t y){
 
 for(uint16_t i=0;i<DEAD_COUNT;i++)
 
-if(DEAD_PIXELS[i].x==x && DEAD_PIXELS[i].y==y) return true; 
+if(DEAD_PIXELS[i].x==x && DEAD_PIXELS[i].y==y) return true;
 
 return false;
 
@@ -178,19 +178,19 @@ mapping = (int*)malloc(sizeof(int)LED_ROWSLED_COLS);
 
 if(!mapping){
 
-Serial.println("ERR: mapping alloc"); while(1) delay(1000); 
+Serial.println("ERR: mapping alloc"); while(1) delay(1000);
 
 }
 
 for(int i=0;i<LED_ROWS*LED_COLS;i++)
 
-mapping[i]=INVALID; 
+mapping[i]=INVALID;
 
 physCount = 0;
 
 for(uint8_t y=0; y<LED_ROWS; y++){
 
-uint8_t count = perRowCounts[y]; if(count==0) continue; int physicalIndex = physCount; if((y%2)==0){ uint8_t placed=0; for(uint8_t x=0; x<LED_COLS; x++){ if(placed < count){ mapping[y*LED_COLS + x] = physicalIndex++; placed++; } else { mapping[y*LED_COLS + x] = INVALID; } } }else{ uint8_t placed=0; for(int x=LED_COLS-1; x>=0; x--){ if(placed < count){ mapping[y*LED_COLS + x] = physicalIndex++; placed++; } else { mapping[y*LED_COLS + x] = INVALID; } } } physCount = physicalIndex; 
+uint8_t count = perRowCounts[y]; if(count==0) continue; int physicalIndex = physCount; if((y%2)==0){ uint8_t placed=0; for(uint8_t x=0; x<LED_COLS; x++){ if(placed < count){ mapping[yLED_COLS + x] = physicalIndex++; placed++; } else { mapping[yLED_COLS + x] = INVALID; } } }else{ uint8_t placed=0; for(int x=LED_COLS-1; x>=0; x--){ if(placed < count){ mapping[yLED_COLS + x] = physicalIndex++; placed++; } else { mapping[yLED_COLS + x] = INVALID; } } } physCount = physicalIndex;
 
 }
 
@@ -200,7 +200,7 @@ leds=(CRGB*)malloc(sizeof(CRGB)*physCount);
 
 if(!leds){
 
-Serial.println("ERR: leds alloc"); while(1) delay(1000); 
+Serial.println("ERR: leds alloc"); while(1) delay(1000);
 
 }
 
@@ -254,19 +254,19 @@ inline bool needsSwapRG(uint8_t x, uint8_t y){
 
 for(uint16_t i=0;i<RG_SWAP_POINTS_N;i++)
 
-if(RG_SWAP_POINTS[i].x==x && RG_SWAP_POINTS[i].y==y) return true; 
+if(RG_SWAP_POINTS[i].x==x && RG_SWAP_POINTS[i].y==y) return true;
 
 for(uint16_t i=0;i<RG_SWAP_COLS_N;i++)
 
-if(RG_SWAP_COLS[i].x==x && inRange(y, RG_SWAP_COLS[i].y0, RG_SWAP_COLS[i].y1)) return true; 
+if(RG_SWAP_COLS[i].x==x && inRange(y, RG_SWAP_COLS[i].y0, RG_SWAP_COLS[i].y1)) return true;
 
 for(uint16_t i=0;i<RG_SWAP_ROWS_N;i++)
 
-if(RG_SWAP_ROWS[i].y==y && inRange(x, RG_SWAP_ROWS[i].x0, RG_SWAP_ROWS[i].x1)) return true; 
+if(RG_SWAP_ROWS[i].y==y && inRange(x, RG_SWAP_ROWS[i].x0, RG_SWAP_ROWS[i].x1)) return true;
 
 for(uint16_t i=0;i<RG_SWAP_RECTS_N;i++)
 
-if(inRange(x, RG_SWAP_RECTS[i].x0, RG_SWAP_RECTS[i].x1) && inRange(y, RG_SWAP_RECTS[i].y0, RG_SWAP_RECTS[i].y1)) return true; 
+if(inRange(x, RG_SWAP_RECTS[i].x0, RG_SWAP_RECTS[i].x1) && inRange(y, RG_SWAP_RECTS[i].y0, RG_SWAP_RECTS[i].y1)) return true;
 
 return false;
 
@@ -280,7 +280,7 @@ if(isDead(x,y)) return;
 
 if (needsSwapRG(x, y)) {
 
-uint8_t t=c.r; c.r=c.g; c.g=t; 
+uint8_t t=c.r; c.r=c.g; c.g=t;
 
 }
 
@@ -290,7 +290,7 @@ int m = mapping[y*LED_COLS + xo];
 
 if(m!=INVALID && m<physCount)
 
-leds[m]=c; 
+leds[m]=c;
 
 }
 
@@ -302,7 +302,7 @@ if(isDead(x,y)) return;
 
 if (needsSwapRG(x, y)) {
 
-uint8_t t=c.r; c.r=c.g; c.g=t; 
+uint8_t t=c.r; c.r=c.g; c.g=t;
 
 }
 
@@ -312,7 +312,7 @@ int m = mapping[y*LED_COLS + xo];
 
 if(m!=INVALID && m<physCount)
 
-leds[m]+=c; 
+leds[m]+=c;
 
 }
 
@@ -466,7 +466,7 @@ uint32_t nowMs = millis();
 
 if (lastUpdateMs == 0) {
 
-lastUpdateMs = nowMs; return; 
+lastUpdateMs = nowMs; return;
 
 }
 
@@ -474,7 +474,7 @@ uint32_t elapsed = nowMs - lastUpdateMs;
 
 if (elapsed >= 1000) {
 
-deviceEpoch += elapsed / 1000; lastUpdateMs = nowMs - (elapsed % 1000); 
+deviceEpoch += elapsed / 1000; lastUpdateMs = nowMs - (elapsed % 1000);
 
 }
 
@@ -534,11 +534,11 @@ bool level = (digitalRead(PIR_PIN) == HIGH);
 
 if (level) {
 
-if (pirHighStarted == 0) pirHighStarted = nowMs; if (nowMs - pirHighStarted >= PIR_HOLD_MS) return true; 
+if (pirHighStarted == 0) pirHighStarted = nowMs; if (nowMs - pirHighStarted >= PIR_HOLD_MS) return true;
 
 } else {
 
-pirHighStarted = 0; 
+pirHighStarted = 0;
 
 }
 
@@ -556,7 +556,7 @@ inline void spawnDot(float x,float y){
 
 for(uint8_t i=0;i<MAX_DOTS;i++){
 
-if(dots[i].life<=0){ dots[i]={x,y,0,0,1.0f}; return; } 
+if(dots[i].life<=0){ dots[i]={x,y,0,0,1.0f}; return; }
 
 }
 
@@ -564,7 +564,7 @@ if(dots[i].life<=0){ dots[i]={x,y,0,0,1.0f}; return; }
 
 inline uint16_t frameDelayMs(){
 
-return map(gSpeed, 1, 400, 200, 1);
+return map(gSpeed, 1, 400, 80, 2);
 
 }
 
@@ -698,7 +698,7 @@ else if (c>='a' && c<='z') up = c-32;
 
 for(uint16_t i=0;<sizeof(FONT)/sizeof(FONT[0]);i++){
 
-if((uint8_t)pgm_read_byte(&FONT[i].ch) == (uint8_t)up){ for(uint8_t k=0;k<5;k++) out[k]=pgm_read_byte(&FONT[i].col[k]); return 1; } 
+if((uint8_t)pgm_read_byte(&FONT[i].ch) == (uint8_t)up){ for(uint8_t k=0;k<5;k++) out[k]=pgm_read_byte(&FONT[i].col[k]); return 1; }
 
 }
 
@@ -716,7 +716,7 @@ getGlyph(c,g);
 
 for(uint8_t cx=0;cx<5;cx++){
 
-for(uint8_t cy=0;cy<7;cy++){ if(g[cx] & (1<<cy)){ int x_draw = x0 + (mirrorX ? (6 - cy) : cy); int y_draw = y0 + (mirrorY ? (4 - cx) : cx); setXY(x_draw, y_draw, color); } } 
+for(uint8_t cy=0;cy<7;cy++){ if(g[cx] & (1<<cy)){ int x_draw = x0 + (mirrorX ? (6 - cy) : cy); int y_draw = y0 + (mirrorY ? (4 - cx) : cx); setXY(x_draw, y_draw, color); } }
 
 }
 
@@ -728,7 +728,7 @@ const int CHAR_SPACING = 8;
 
 for(int16_t i=0;i<s.length();i++){
 
-char ch = s[i]; int x_pos = x + i * CHAR_SPACING; drawChar(x_pos, y, ch, base, true, true); 
+char ch = s[i]; int x_pos = x + i * CHAR_SPACING; drawChar(x_pos, y, ch, base, true, true);
 
 }
 
@@ -766,7 +766,7 @@ lpath[lcount++] = {x,y};
 
 while(y < (int)LED_ROWS-1 && lcount<63){
 
-int dx = random(-1,2); x = constrain(x+dx, 0, LED_COLS-1); y++; lpath[lcount++] = {x,y}; if(random(100)<15 && lcount<62 && y<LED_ROWS-1){ int bx=x, by=y, steps=min(2, (int)LED_ROWS-1-y); for(int i=0;i<steps;i++){ int ddx = random(-1,2); bx = constrain(bx+ddx,0,LED_COLS-1); by++; lpath[lcount++]={bx,by}; } } 
+int dx = random(-1,2); x = constrain(x+dx, 0, LED_COLS-1); y++; lpath[lcount++] = {x,y}; if(random(100)<15 && lcount<62 && y<LED_ROWS-1){ int bx=x, by=y, steps=min(2, (int)LED_ROWS-1-y); for(int i=0;i<steps;i++){ int ddx = random(-1,2); bx = constrain(bx+ddx,0,LED_COLS-1); by++; lpath[lcount++]={bx,by}; } }
 
 }
 
@@ -792,21 +792,21 @@ shoot.y = random(0, LED_ROWS - 1);
 
 if(random(2)==0){
 
-shoot.vx = -0.35f - (gSpeed-10)/700.0f; if (shoot.x < LED_COLS / 2) shoot.x = LED_COLS + random(5, 10); 
+shoot.vx = -0.35f - (gSpeed-10)/700.0f; if (shoot.x < LED_COLS / 2) shoot.x = LED_COLS + random(5, 10);
 
 } else {
 
-shoot.vx = 0.35f + (gSpeed-10)/700.0f; if (shoot.x > LED_COLS / 2) shoot.x = -random(5, 10); 
+shoot.vx = 0.35f + (gSpeed-10)/700.0f; if (shoot.x > LED_COLS / 2) shoot.x = -random(5, 10);
 
 }
 
 if(random(2)==0)
 
-shoot.vy = 0.18f + (gSpeed-10)/1000.0f; 
+shoot.vy = 0.18f + (gSpeed-10)/1000.0f;
 
 else
 
-shoot.vy = -0.18f - (gSpeed-10)/1000.0f; 
+shoot.vy = -0.18f - (gSpeed-10)/1000.0f;
 
 shoot.life = 220;
 
@@ -824,7 +824,7 @@ void fxColorBars(uint32_t){
 
 for(uint8_t y=0;y<LED_ROWS;y++)
 
-for(uint8_t x=0;x<LED_COLS;x++) setXY(x,y,CHSV(gHue + x*3 + y*6, 200, 255)); 
+for(uint8_t x=0;x<LED_COLS;x++) setXY(x,y,CHSV(gHue + x3 + y6, 200, 255));
 
 }void fxWaves(uint32_t t){
 
@@ -842,7 +842,7 @@ else speedShift = map(sp, 10, 200, 3, 0);
 
 for(uint8_t y=0;y<LED_ROWS;y++)
 
-for(uint8_t x=0;x<LED_COLS;x++){ float dx=x-cx,dy=y-cy; float d=sqrtf(dx*dx+dy*dy); uint8_t val=sin8((uint16_t)(d*28) - (t>>speedShift)); setXY(x,y,CHSV(gHue+(uint8_t)(d*6),200,val)); } 
+for(uint8_t x=0;x<LED_COLS;x++){ float dx=x-cx,dy=y-cy; float d=sqrtf(dxdx+dydy); uint8_t val=sin8((uint16_t)(d28) - (t>>speedShift)); setXY(x,y,CHSV(gHue+(uint8_t)(d6),200,val)); }
 
 }
 
@@ -858,7 +858,7 @@ float cx=(LED_COLS-1)/2.0f, cy=(LED_ROWS-1)/2.0f;
 
 for(uint8_t y=0;y<LED_ROWS;y++)
 
-for(uint8_t x=0;x<LED_COLS;x++){ float dx=x-cx,dy=y-cy; float d=sqrtf(dx*dx+dy*dy); float band=expf(-((d-R)*(d-R))/(2.0f*RIPPLE_WIDTH*RIPPLE_WIDTH)); float fade=expf(-R*RIPPLE_FADE); uint8_t v=(uint8_t)constrain(band*fade*255.0f,0.0f,255.0f); setXY(x,y,CHSV((uint8_t)(gHue+d*6),200,v)); } 
+for(uint8_t x=0;x<LED_COLS;x++){ float dx=x-cx,dy=y-cy; float d=sqrtf(dxdx+dydy); float band=expf(-((d-R)(d-R))/(2.0fRIPPLE_WIDTHRIPPLE_WIDTH)); float fade=expf(-RRIPPLE_FADE); uint8_t v=(uint8_t)constrain(bandfade255.0f,0.0f,255.0f); setXY(x,y,CHSV((uint8_t)(gHue+d*6),200,v)); }
 
 }
 
@@ -866,17 +866,17 @@ void fxLightning(uint32_t t){
 
 if(t > gLightningNext && gLightningPhase==0) {
 
-lightningSpawn(); 
+lightningSpawn();
 
 }
 
 for(uint8_t y=0;y<LED_ROWS;y++)
 
-for(uint8_t x=0;x<LED_COLS;x++) addXY(x,y,CRGB(1,1,2)); 
+for(uint8_t x=0;x<LED_COLS;x++) addXY(x,y,CRGB(1,1,2));
 
 if(gLightningPhase>0 && gLightningPhase<4 && lcount>0){
 
-CRGB c = (gLightningPhase==1)?CRGB(255,255,255):(gLightningPhase==2)?CRGB(150,180,255):CRGB(60,90,180); for(uint8_t i=0;i<lcount;i++){ setXY(lpath[i].x, lpath[i].y, c); if(lpath[i].x+1<LED_COLS) addXY(lpath[i].x+1,lpath[i].y, c/4); if(lpath[i].x>0) addXY(lpath[i].x-1,lpath[i].y, c/4); } gLightningPhase++; 
+CRGB c = (gLightningPhase==1)?CRGB(255,255,255):(gLightningPhase==2)?CRGB(150,180,255):CRGB(60,90,180); for(uint8_t i=0;i<lcount;i++){ setXY(lpath[i].x, lpath[i].y, c); if(lpath[i].x+1<LED_COLS) addXY(lpath[i].x+1,lpath[i].y, c/4); if(lpath[i].x>0) addXY(lpath[i].x-1,lpath[i].y, c/4); } gLightningPhase++;
 
 }
 
@@ -888,17 +888,17 @@ void fxShootingStar(uint32_t t){
 
 if(t>nextShoot && shoot.life==0){
 
-spawnShoot(); uint16_t delay_ms = map(gSpeed, 10, 200, 3500, 1000); nextShoot = t + random(delay_ms / 3, delay_ms); 
+spawnShoot(); uint16_t delay_ms = map(gSpeed, 10, 200, 3500, 1000); nextShoot = t + random(delay_ms / 3, delay_ms);
 
 }
 
 for(uint8_t y=0;y<LED_ROWS;y++)
 
-for(uint8_t x=0;x<LED_COLS;x++) addXY(x,y, CHSV(160,200,6)); 
+for(uint8_t x=0;x<LED_COLS;x++) addXY(x,y, CHSV(160,200,6));
 
 if(shoot.life){
 
-for(int i=0;i<15;i++){ int px = (int)(shoot.x - i*shoot.vx*1.5f); int py = (int)(shoot.y - i*shoot.vy*1.5f); if(px>=0 && py>=0 && px<LED_COLS && py<LED_ROWS){ uint8_t v = clampu8(255 - i*16); addXY(px,py, CRGB(v,v,v)); } } setXY((int)shoot.x,(int)shoot.y, CRGB::White); shoot.x += shoot.vx; shoot.y += shoot.vy; if(shoot.x < -20 || shoot.x >= LED_COLS+20 || shoot.y < -20 || shoot.y >= LED_ROWS+20) shoot.life=0; else shoot.life--; 
+for(int i=0;i<15;i++){ int px = (int)(shoot.x - ishoot.vx1.5f); int py = (int)(shoot.y - ishoot.vy1.5f); if(px>=0 && py>=0 && px<LED_COLS && py<LED_ROWS){ uint8_t v = clampu8(255 - i*16); addXY(px,py, CRGB(v,v,v)); } } setXY((int)shoot.x,(int)shoot.y, CRGB::White); shoot.x += shoot.vx; shoot.y += shoot.vy; if(shoot.x < -20 || shoot.x >= LED_COLS+20 || shoot.y < -20 || shoot.y >= LED_ROWS+20) shoot.life=0; else shoot.life--;
 
 }
 
@@ -908,11 +908,11 @@ void fxGalaxy(uint32_t){
 
 for(uint8_t y=0;y<LED_ROWS;y++)
 
-for(uint8_t x=0;x<LED_COLS;x++) addXY(x,y, CHSV(180,200,4)); 
+for(uint8_t x=0;x<LED_COLS;x++) addXY(x,y, CHSV(180,200,4));
 
 for(uint8_t y=0;y<LED_ROWS;y++){
 
-for(uint8_t x=0;x<LED_COLS;x++){ uint16_t i=XYi(x,y); if(starPhase[i]==0 && random(1000)<3) starPhase[i]=random(1,255); if(starPhase[i]){ uint8_t v = sin8(starPhase[i]); setXY(x,y, CHSV(0,0, v)); if(starPhase[i]>2) starPhase[i]-=2; else starPhase[i]=0; } } 
+for(uint8_t x=0;x<LED_COLS;x++){ uint16_t i=XYi(x,y); if(starPhase[i]==0 && random(1000)<3) starPhase[i]=random(1,255); if(starPhase[i]){ uint8_t v = sin8(starPhase[i]); setXY(x,y, CHSV(0,0, v)); if(starPhase[i]>2) starPhase[i]-=2; else starPhase[i]=0; } }
 
 }
 
@@ -932,7 +932,7 @@ else speedShift = map(sp, 10, 200, 3, 0);
 
 for(uint8_t y=0;y<LED_ROWS;y++)
 
-for(uint8_t x=0;x<LED_COLS;x++){ uint8_t h = (x*6 + (t>>speedShift)) & 0xFF; setXY(x,y, CHSV(h, 240, 255)); } 
+for(uint8_t x=0;x<LED_COLS;x++){ uint8_t h = (x*6 + (t>>speedShift)) & 0xFF; setXY(x,y, CHSV(h, 240, 255)); }
 
 }
 
@@ -940,17 +940,17 @@ void fxRegionalFlash(uint32_t t){
 
 if(t > gFlashNext && gFlashPhase==0) {
 
-flashW = random(5, 12); flashH = random(3, 7); flashX = random(0, LED_COLS - flashW); flashY = random(0, LED_ROWS - flashH); gFlashPhase = 1; uint16_t delay_ms = map(gSpeed, 10, 200, 1800, 450); gFlashNext = millis() + random(delay_ms / 4, delay_ms); 
+flashW = random(5, 12); flashH = random(3, 7); flashX = random(0, LED_COLS - flashW); flashY = random(0, LED_ROWS - flashH); gFlashPhase = 1; uint16_t delay_ms = map(gSpeed, 10, 200, 1800, 450); gFlashNext = millis() + random(delay_ms / 4, delay_ms);
 
 }
 
 for(uint8_t y=0;y<LED_ROWS;y++)
 
-for(uint8_t x=0;x<LED_COLS;x++) addXY(x,y,CRGB(1,1,2)); 
+for(uint8_t x=0;x<LED_COLS;x++) addXY(x,y,CRGB(1,1,2));
 
 if(gFlashPhase > 0 && gFlashPhase < 5){
 
-CRGB c = (gFlashPhase==1)?CRGB(255,255,255):(gFlashPhase==2)?CRGB(150,150,150):(gFlashPhase==3)?CRGB(80,80,80):CRGB(30,30,30); for(uint8_t y=flashY; y < flashY+flashH && y < LED_ROWS; y++) for(uint8_t x=flashX; x < flashX+flashW && x < LED_COLS; x++) setXY(x, y, c); gFlashPhase++; 
+CRGB c = (gFlashPhase==1)?CRGB(255,255,255):(gFlashPhase==2)?CRGB(150,150,150):(gFlashPhase==3)?CRGB(80,80,80):CRGB(30,30,30); for(uint8_t y=flashY; y < flashY+flashH && y < LED_ROWS; y++) for(uint8_t x=flashX; x < flashX+flashW && x < LED_COLS; x++) setXY(x, y, c); gFlashPhase++;
 
 }
 
@@ -962,7 +962,7 @@ void fxMarquee(uint32_t t){
 
 for(uint8_t y=0;y<LED_ROWS;y++)
 
-for(uint8_t x=0;x<LED_COLS;x++) addXY(x,y, CRGB(0,0,0)); 
+for(uint8_t x=0;x<LED_COLS;x++) addXY(x,y, CRGB(0,0,0));
 
 gTextHue += 1;
 
@@ -1035,9 +1035,9 @@ for (size_t i = 0; i < in.length(); ++i) {
 
 char c = in[i];
 
-if (c == '"' || c == '\\') {
+if (c == '"' || c == '') {
 
-  out += '\\';
+out += '';
 
 }
 
@@ -1050,600 +1050,525 @@ return out;
 }
 
 String jsonState() {
-  String s = "{";
+String s = "{";
 
-  s += "\"power\":";
-  s += (gPower ? "true" : "false");
-  s += ",";
+s += ""power":";
+s += (gPower ? "true" : "false");
+s += ",";
 
-  s += "\"brightness\":";
-  s += String(gBrightness);
-  s += ",";
+s += ""brightness":";
+s += String(gBrightness);
+s += ",";
 
-  s += "\"speed\":";
-  s += String(gSpeed);
-  s += ",";
+s += ""speed":";
+s += String(gSpeed);
+s += ",";
 
-  s += "\"effect\":";
-  s += String(gEffect);
-  s += ",";
+s += ""effect":";
+s += String(gEffect);
+s += ",";
 
-  s += "\"solid\":";
-  s += (gSolidMode ? "true" : "false");
-  s += ",";
+s += ""solid":";
+s += (gSolidMode ? "true" : "false");
+s += ",";
 
-  s += "\"paused\":";
-  s += (gPaused ? "true" : "false");
-  s += ",";
+s += ""paused":";
+s += (gPaused ? "true" : "false");
+s += ",";
 
-  s += "\"text\":\"";
-  s += escapeJson(gText);
-  s += "\",";
+s += ""text":"";
+s += escapeJson(gText);
+s += "",";
 
-  s += "\"marqueespeed\":";
-  s += String(gMarqueeSpeed);
-  s += ",";
+s += ""marqueespeed":";
+s += String(gMarqueeSpeed);
+s += ",";
 
-  s += "\"absence_ms\":";
-  s += String(absenceOffMs);
-  s += ",";
+s += ""absence_ms":";
+s += String(absenceOffMs);
+s += ",";
 
-  s += "\"restore_ms\":";
-  s += String(restoreWindowMs);
-  s += ",";
+s += ""restore_ms":";
+s += String(restoreWindowMs);
+s += ",";
 
-  s += "\"pir\":";
-  s += (digitalRead(PIR_PIN) == HIGH ? "true" : "false");
-  s += ",";
+s += ""pir":";
+s += (digitalRead(PIR_PIN) == HIGH ? "true" : "false");
+s += ",";
 
-  s += "\"pir_enabled\":";
-  s += (gPirEnabled ? "true" : "false");
-  s += ",";
+s += ""pir_enabled":";
+s += (gPirEnabled ? "true" : "false");
+s += ",";
 
-  s += "\"tz_min\":";
-  s += String(tzOffsetMin);
-  s += ",";
+s += ""tz_min":";
+s += String(tzOffsetMin);
+s += ",";
 
-  s += "\"pir_on_min\":";
-  s += String(pirOnMin);
-  s += ",";
+s += ""pir_on_min":";
+s += String(pirOnMin);
+s += ",";
 
-  s += "\"pir_off_min\":";
-  s += String(pirOffMin);
-  s += ",";
+s += ""pir_off_min":";
+s += String(pirOffMin);
+s += ",";
 
-  s += "\"epoch\":";
-  s += String(nowUtcSec());
+s += ""epoch":";
+s += String(nowUtcSec());
 
-  s += "}";
-  return s;
+s += "}";
+return s;
 }
 
 const char* OTA_PAGE = R"OTA(
 
-<html>  <head><meta charset="utf-8">
+<html>  <head><meta charset="utf-8">  <title>OTA Update</title>    </head>  <body><h2>OTA Firmware Update</h2>  <form method="POST" action="/update" enctype="multipart/form-data">    <input type="file" name="firmware">    <input type="submit" value="Upload">  </form>    </body></html>)OTA";  const char HTML_INDEX[] PROGMEM = R"HTML(  <!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8" /><title>LED Kontrol Paneli 💡</title><meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" /><style>  .effect-row {  display: flex;
 
-<title>OTA Update</title>
+align-items: center;
 
-  </head>  <body><h2>OTA Firmware Update</h2>
+gap: 12px;
 
-<form method="POST" action="/update" enctype="multipart/form-data">
-
-  <input type="file" name="firmware">
-
-  <input type="submit" value="Upload">
-
-</form>
-
-  </body></html>)OTA";
-
-const char HTML_INDEX[] PROGMEM = R"HTML(
-
-<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8" /><title>LED Kontrol Paneli 💡</title><meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" /><style>
-  
-.effect-row {
-  
-    display: flex;
-  
-    align-items: center;
-  
-    gap: 12px;
-  
 }
-  
 
-  
 .effect-label {
-  
-    font-size: 0.9rem;
-  
-    opacity: 0.85;
-  
-}
-  
 
-  
+font-size: 0.9rem;
+
+opacity: 0.85;
+
+}
+
 .effect-select {
-  
-    flex: 1;
-  
-    background: #0f172a;           /* koyu lacivert arkaplan */
-  
-    color: #e2e8f0;                /* açık gri yazı */
-  
-    padding: 8px 12px;
-  
-    border-radius: 10px;
-  
-    border: 1px solid #1e293b;
-  
-    appearance: none;
-  
-    outline: none;
-  
-    font-size: 0.9rem;
-  
-}
-  
 
-  
+flex: 1;
+
+background: #0f172a;           /* koyu lacivert arkaplan */
+
+color: #e2e8f0;                /* açık gri yazı */
+
+padding: 8px 12px;
+
+border-radius: 10px;
+
+border: 1px solid #1e293b;
+
+appearance: none;
+
+outline: none;
+
+font-size: 0.9rem;
+
+}
+
 .effect-select:focus {
-  
-    border-color: #3b82f6;         /* mavi glow efekti */
-  
-    box-shadow: 0 0 6px #3b82f6;
-  
-}
-  
 
-  
+border-color: #3b82f6;         /* mavi glow efekti */
+
+box-shadow: 0 0 6px #3b82f6;
+
+}
+
 .effect-select option {
-  
-    background: #0f172a;
-  
-    color: #e2e8f0;
-  
-}
-  
 
-  
+background: #0f172a;
+
+color: #e2e8f0;
+
+}
+
 .text-row {
-  
-    display: flex;
-  
-    align-items: center;
-  
-    gap: 10px;
-  
-}
-  
 
-  
+display: flex;
+
+align-items: center;
+
+gap: 10px;
+
+}
+
 .text-row input {
-  
-    flex: 1;
-  
-}
-  
 
-  
+flex: 1;
+
+}
+
 .text-buttons {
-  
-    display: flex;
-  
-    flex-direction: row;
-  
-    gap: 8px;
-  
-}
-  
 
-  
+display: flex;
+
+flex-direction: row;
+
+gap: 8px;
+
+}
+
 .clr-white {
-  
-  background: #ffffff;
-  
-  color: #000;
-  
-}
-  
 
-  
+background: #ffffff;
+
+color: #000;
+
+}
+
 .clr-red {
-  
-  background: #dc2626; /* canlı kırmızı */
-  
-  color: #fff;
-  
-}
-  
 
-  
+background: #dc2626; /* canlı kırmızı */
+
+color: #fff;
+
+}
+
 .clr-green {
-  
-  background: #16a34a; /* canlı yeşil */
-  
-  color: #fff;
-  
-}
-  
 
-  
+background: #16a34a; /* canlı yeşil */
+
+color: #fff;
+
+}
+
 .clr-blue {
-  
-  background: #2563eb; /* güçlü mavi */
-  
-  color: #fff;
-  
-}
-  
 
-  
+background: #2563eb; /* güçlü mavi */
+
+color: #fff;
+
+}
+
 body {
-  
-  background: #05060a;
-  
-  color: #f5f5f5;
-  
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  
-  margin: 0;
-  
-  padding: 0;
-  
+
+background: #05060a;
+
+color: #f5f5f5;
+
+font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+margin: 0;
+
+padding: 0;
+
 }
-  
+
 .container {
-  
-  max-width: 420px;
-  
-  margin: 0 auto;
-  
-  padding: 16px;
-  
+
+max-width: 420px;
+
+margin: 0 auto;
+
+padding: 16px;
+
 }
-  
+
 h1 {
-  
-  font-size: 1.3rem;
-  
-  margin-bottom: 12px;
-  
-  text-align: center;
-  
+
+font-size: 1.3rem;
+
+margin-bottom: 12px;
+
+text-align: center;
+
 }
-  
+
 .card {
-  
-  background: #101320;
-  
-  border-radius: 12px;
-  
-  padding: 12px 14px;
-  
-  margin-bottom: 12px;
-  
-  box-shadow: 0 8px 16px rgba(0,0,0,0.4);
-  
+
+background: #101320;
+
+border-radius: 12px;
+
+padding: 12px 14px;
+
+margin-bottom: 12px;
+
+box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+
 }
-  
+
 .card h2 {
-  
-  font-size: 1rem;
-  
-  margin: 0 0 8px 0;
-  
+
+font-size: 1rem;
+
+margin: 0 0 8px 0;
+
 }
-  
+
 .row {
-  
-  display: flex;
-  
-  align-items: center;
-  
-  justify-content: space-between;
-  
-  margin-bottom: 8px;
-  
-  flex-wrap: wrap;
-  
-  gap: 6px;
-  
+
+display: flex;
+
+align-items: center;
+
+justify-content: space-between;
+
+margin-bottom: 8px;
+
+flex-wrap: wrap;
+
+gap: 6px;
+
 }
-  
+
 label {
-  
-  font-size: 0.85rem;
-  
+
+font-size: 0.85rem;
+
 }
-  
+
 button, select, input[type="range"], input[type="time"], input[type="number"], input[type="text"] {
-  
-  font-family: inherit;
-  
-  font-size: 0.86rem;
-  
+
+font-family: inherit;
+
+font-size: 0.86rem;
+
 }
-  
+
 button {
-  
-  background: #2563eb;
-  
-  border: none;
-  
-  color: white;
-  
-  padding: 6px 10px;
-  
-  border-radius: 999px;
-  
-  cursor: pointer;
-  
+
+background: #2563eb;
+
+border: none;
+
+color: white;
+
+padding: 6px 10px;
+
+border-radius: 999px;
+
+cursor: pointer;
+
 }
-  
+
 button.secondary {
-  
-  background: #1e293b;
-  
+
+background: #1e293b;
+
 }
-  
+
 button.danger {
-  
-  background: #dc2626;
-  
+
+background: #dc2626;
+
 }
-  
+
 button:active {
-  
-  transform: scale(0.97);
-  
+
+transform: scale(0.97);
+
 }
-  
+
 .slider-row {
-  
-  display: flex;
-  
-  align-items: center;
-  
-  gap: 8px;
-  
+
+display: flex;
+
+align-items: center;
+
+gap: 8px;
+
 }
-  
+
 .slider-row span {
-  
-  font-size: 0.8rem;
-  
-  opacity: 0.8;
-  
+
+font-size: 0.8rem;
+
+opacity: 0.8;
+
 }
-  
+
 input[type="range"] {
-  
-  width: 100%;
-  
+
+width: 100%;
+
 }
-  
+
 .badge {
-  
-  display: inline-block;
-  
-  padding: 2px 8px;
-  
-  border-radius: 999px;
-  
-  background: #1e293b;
-  
-  font-size: 0.7rem;
-  
-  margin-left: 4px;
-  
+
+display: inline-block;
+
+padding: 2px 8px;
+
+border-radius: 999px;
+
+background: #1e293b;
+
+font-size: 0.7rem;
+
+margin-left: 4px;
+
 }
-  
+
 .toggle-row {
-  
-  display: flex;
-  
-  align-items: center;
-  
-  gap: 8px;
-  
-  flex-wrap: wrap;
-  
+
+display: flex;
+
+align-items: center;
+
+gap: 8px;
+
+flex-wrap: wrap;
+
 }
-  
+
 .small {
-  
-  font-size: 0.75rem;
-  
-  opacity: 0.8;
-  
+
+font-size: 0.75rem;
+
+opacity: 0.8;
+
 }
-  
+
 input[type="time"],
-  
+
 input[type="number"],
-  
+
 input[type="text"] {
-  
-  background: #020617;
-  
-  border: 1px solid #1f2937;
-  
-  border-radius: 999px;
-  
-  padding: 4px 8px;
-  
-  color: #e5e7eb;
-  
+
+background: #020617;
+
+border: 1px solid #1f2937;
+
+border-radius: 999px;
+
+padding: 4px 8px;
+
+color: #e5e7eb;
+
 }
-  
+
 input[type="time"]:focus,
-  
+
 input[type="number"]:focus,
-  
+
 input[type="text"]:focus {
-  
-  outline: none;
-  
-  border-color: #3b82f6;
-  
+
+outline: none;
+
+border-color: #3b82f6;
+
 }
-  
+
 .grid-buttons {
-  
-  display: grid;
-  
-  grid-template-columns: repeat(2, minmax(0,1fr));
-  
-  gap: 6px;
-  
-  margin-top: 6px;
-  
+
+display: grid;
+
+grid-template-columns: repeat(2, minmax(0,1fr));
+
+gap: 6px;
+
+margin-top: 6px;
+
 }
-  
+
 .grid-buttons button {
-  
-  width: 100%;
-  
+
+width: 100%;
+
 }
-  
+
 .touchpad {
-  
-  margin-top: 8px;
-  
-  width: 100%;
-  
-  aspect-ratio: 16 / 9;
-  
-  background: radial-gradient(circle at 20% 20%, #38bdf8 0, transparent 60%), radial-gradient(circle at 80% 80%, #a855f7 0, transparent 60%), #020617;
-  
-  border-radius: 12px;
-  
-  position: relative;
-  
-  overflow: hidden;
-  
-  touch-action: none;
-  
+
+margin-top: 8px;
+
+width: 100%;
+
+aspect-ratio: 16 / 9;
+
+background: radial-gradient(circle at 20% 20%, #38bdf8 0, transparent 60%), radial-gradient(circle at 80% 80%, #a855f7 0, transparent 60%), #020617;
+
+border-radius: 12px;
+
+position: relative;
+
+overflow: hidden;
+
+touch-action: none;
+
 }
-  
+
 .touchpad::after {
-  
-  content: "Dokun & Sürükle";
-  
-  position: absolute;
-  
-  left: 50%;
-  
-  top: 50%;
-  
-  transform: translate(-50%,-50%);
-  
-  font-size: 0.75rem;
-  
-  opacity: 0.7;
-  
+
+content: "Dokun & Sürükle";
+
+position: absolute;
+
+left: 50%;
+
+top: 50%;
+
+transform: translate(-50%,-50%);
+
+font-size: 0.75rem;
+
+opacity: 0.7;
+
 }
-  
+
 .footer {
-  
-  margin-top: 16px;
-  
-  text-align: center;
-  
-  font-size: 0.7rem;
-  
-  opacity: 0.7;
-  
+
+margin-top: 16px;
+
+text-align: center;
+
+font-size: 0.7rem;
+
+opacity: 0.7;
+
 }
-  
+
 .footer-buttons {
-  
-  margin-top: 8px;
-  
-  display: flex;
-  
-  justify-content: center;
-  
-  gap: 8px;
-  
-  flex-wrap: wrap;
-  
-}
-  
 
-  
+margin-top: 8px;
+
+display: flex;
+
+justify-content: center;
+
+gap: 8px;
+
+flex-wrap: wrap;
+
+}
+
 /* Tablet / yatay görünüm için */
-  
+
 @media (orientation: landscape) {
-  
-  .container {
-  
-    max-width: 900px;
-  
-    padding: 12px 32px;
-  
-  }
-  
+
+.container {
+
+max-width: 900px;
+
+padding: 12px 32px;
+
 }
-  
+
+}
+
 </style></head><body>  <div class="card"><h2>Genel<span id="statusBadge" class="badge">Bağlanıyor...</span></h2>
-
+    
 <div class="row">
-
   <div class="toggle-row">
-
     <button id="btnPower">Güç</button>
-
     <button id="btnPir" class="secondary">Sensör:</button>
-
   </div>
 
-  <div class="toggle-row" style="flex:1;">
-
+  <div class="toggle-row" style="flex:1; justify-content:flex-end; gap:6px;">
+    <span class="small">Saat:</span>
+    <span id="devTime" class="badge">--:--</span>
     <span class="small">Hareket:</span>
-
     <span id="pirState" class="badge">-</span>
-
-
-
-    <div style="margin-left:auto; display:flex; align-items:center; gap:4px;">
-
-      <span class="small">Saat:</span>
-
-      <span id="devTime" class="badge">--:--</span>
-
-    </div>
-
   </div>
-
 </div>
-
-  </div>  <div class="card"><h2>Efektler 🌈</h2>
-
-   <div class="row effect-row"><label for="effect" class="effect-label">Efekt Seç:</label>
-
-  <select id="effect" class="effect-select"><option value="0">Rengarenk İlizyon</option>
-
-<option value="1">Dalga</option>
-
-<option value="2">Disko / Ripple</option>
-
-<option value="3">Yıldırım</option>
-
-<option value="4">Kayan Yıldız</option>
-
-<option value="5">Galaksi</option>
-
-<option value="6">Gökkuşağı</option>
-
-<option value="7">Bölgesel Parlama</option>
-
-<option value="8">I LOVE YOU NAZAN</option>
-
-  </select></div><div class="grid-buttons">
-
-<button id="btnSolidWhite" class="clr-white">Beyaz</button>
+</div>  
+<div class="card"><h2>Efektler 🌈</h2>     
+<div class="row effect-row"><label for="effect" class="effect-label">Efekt Seç:</label>  
+<select id="effect" class="effect-select">
+  <option value="0">Rengarenk</option>
+  <option value="1">İlüzyon</option>
+  <option value="2">Dalga</option>
+  <option value="3">Yıldırım</option>
+  <option value="4">Yıldız Kayması</option>
+  <option value="5">Parıltı</option>
+  <option value="6">Gökkuşağı</option>
+  <option value="7">Flaş</option>
+  <option value="8">I LOVE YOU NAZAN</option>
+</select>
+</div><div class="grid-buttons">  <button id="btnSolidWhite" class="clr-white">Beyaz</button>
 
 <button id="btnSolidRed"   class="clr-red">Kırmızı</button>
 
@@ -1653,469 +1578,338 @@ input[type="text"]:focus {
 
 <button id="btnPlay" class="secondary">Durdur</button>
 
-  <button id="btnNextFx" class="secondary">Efekte Geç</button>
+<button id="btnNextFx" class="secondary">Efekte Geç</button>
 
+</div>    </div>  <div class="card"><h2>Parlaklık & Hız</h2>  <div class="slider-row">    
+<span>Parlaklık</span>    <input id="brightness" type="range" min="0" max="200" value="140" />  <span id="brightnessVal">70%</span>  </div>  <div class="slider-row">    
+<span>Efekt Hızı</span>    
+<input id="speed" type="range" min="1" max="10" value="5" />    
+<span id="speedVal">Seviye 5/10</span>>  </div>  <div class="slider-row">  <span>Yazı Hızı</span>  <input id="marquee" type="range" min="1" max="400" value="100" />  <span id="marqueeVal">25%</span>
 
+</div>    </div>  <div class="card"><h2>Yazı Efekti ✍️</h2>  <div class="row text-row">  <input id="textMsg" type="text" placeholder="Yazıyı Giriniz..." />  <div class="text-buttons">  <button id="btnSendText">Gönder</button>    <button id="btnResetOffset" class="secondary">Başa Sar</button>
 
-</div>
+</div>  </div>  <div class="card"><h2>Touchpad Efekti 🪄</h2>  <div id="touchpad" class="touchpad"></div>    </div>  <div class="card"><h2>Sensör Zamanlama & Auto-Off</h2>  <div class="row">  <label for="autoMinutes">Kapanma Süresi (dk)</label>  <input id="autoMinutes" type="number" min="1" max="10" value="1" />  </div>  <div class="row">  <label for="onTime">Açılış Saati</label>
 
-  </div>  <div class="card"><h2>Parlaklık & Hız</h2>
+<input id="onTime" type="time" />  </div>  <div class="row">  <label for="offTime">Kapanış Saati</label>
 
-<div class="slider-row">
-<span>Parlaklık</span>
+<input id="offTime" type="time" />  </div>  <div class="grid-buttons">  <button id="btnSetSchedule">Kaydet</button>
 
-  <input id="brightness" type="range" min="0" max="200" value="140" />
+<button id="btnSyncTime" class="secondary">Saati Eşitle</button>
 
-  <span id="brightnessVal">70%</span>
+</div>    </div>  <div class="footer"><div>• Designed and Programmed by Murat Can TUTAR •</div>  <div class="footer-buttons">  <button id="btnOta" class="secondary">Sistem Güncelleme</button>  </div>    </div></div><script>  const $ = (id) => document.getElementById(id);  function apiGet(path) {
 
-</div>
+return fetch(path, { cache: "no-store" })
 
-<div class="slider-row">
-<span>Efekt Hızı</span>
-<input id="speed" type="range" min="1" max="10" value="5" />
-<span id="speedVal">Seviye 5/10</span>>
+.then(r => r.json())
 
-</div>
+.catch(() => null);
 
-<div class="slider-row">
-
-  <span>Yazı Hızı</span>
-
-  <input id="marquee" type="range" min="1" max="400" value="100" />
-
-  <span id="marqueeVal">25%</span>
-
-</div>
-
-  </div>  <div class="card"><h2>Yazı Efekti ✍️</h2>
-
-<div class="row text-row">
-
-<input id="textMsg" type="text" placeholder="Yazıyı Giriniz..." />
-
-
-
-<div class="text-buttons">
-
-    <button id="btnSendText">Gönder</button>
-
-    <button id="btnResetOffset" class="secondary">Başa Sar</button>
-
-</div>
-
-</div>  <div class="card"><h2>Touchpad Efekti 🪄</h2>
-
-<div id="touchpad" class="touchpad"></div>
-
-  </div>  <div class="card"><h2>Sensör Zamanlama & Auto-Off</h2>
-
-<div class="row">
-
-  <label for="autoMinutes">Kapanma Süresi (dk)</label>
-
-  <input id="autoMinutes" type="number" min="1" max="10" value="1" />
-
-</div>
-
-<div class="row">
-
-  <label for="onTime">Açılış Saati</label>
-
-  <input id="onTime" type="time" />
-
-</div>
-
-<div class="row">
-
-  <label for="offTime">Kapanış Saati</label>
-
-  <input id="offTime" type="time" />
-
-</div>
-
-<div class="grid-buttons">
-
-  <button id="btnSetSchedule">Kaydet</button>
-
-  <button id="btnSyncTime" class="secondary">Saati Eşitle</button>
-
-</div>
-
-  </div>  <div class="footer"><div>• Designed and Programmed by Murat Can TUTAR •</div>
-
-<div class="footer-buttons">
-
-  <button id="btnOta" class="secondary">Sistem Güncelleme</button>
-
-</div>
-
-  </div></div><script>
-  
-const $ = (id) => document.getElementById(id);
-  
-
-  
-function apiGet(path) {
-  
-  return fetch(path, { cache: "no-store" })
-  
-    .then(r => r.json())
-  
-    .catch(() => null);
-  
 }
-  
+
 function formatDeviceTime(epoch, tzMin) {
-  if (!epoch) return "--:--";
+if (!epoch) return "--:--";
 
-  const localSec = epoch + (tzMin * 60);
+const localSec = epoch + (tzMin * 60);
 
-  const d = new Date(localSec * 1000);
+const d = new Date(localSec * 1000);
 
-  const hh = d.getUTCHours().toString().padStart(2, "0");
-  const mm = d.getUTCMinutes().toString().padStart(2, "0");
-  return hh + ":" + mm;
+const hh = d.getUTCHours().toString().padStart(2, "0");
+const mm = d.getUTCMinutes().toString().padStart(2, "0");
+return hh + ":" + mm;
 }
-  
-function updateFromState(st) {
-  
-  if (!st) return;
-  
 
-  
-  $("statusBadge").textContent = st.power ? "Açık" : "Kapalı";
-  
-  $("statusBadge").style.background = st.power ? "#16a34a" : "#1e293b";
- 
+function updateFromState(st) {
+
+if (!st) return;
+
+$("statusBadge").textContent = st.power ? "Açık" : "Kapalı";
+
+$("statusBadge").style.background = st.power ? "#16a34a" : "#1e293b";
+
 $("brightness").value = st.brightness;
 
-  let speedLevel    = Math.round(st.speed / 40); 
-  let marqueeLevel  = Math.round(st.marqueespeed / 40);
+let speedLevel    = Math.round(st.speed / 40);
+let marqueeLevel  = Math.round(st.marqueespeed / 40);
 
-  if (speedLevel   < 1)  speedLevel   = 1;
-  if (speedLevel   > 10) speedLevel   = 10;
-  if (marqueeLevel < 1)  marqueeLevel = 1;
-  if (marqueeLevel > 10) marqueeLevel = 10;
+if (speedLevel   < 1)  speedLevel   = 1;
+if (speedLevel   > 10) speedLevel   = 10;
+if (marqueeLevel < 1)  marqueeLevel = 1;
+if (marqueeLevel > 10) marqueeLevel = 10;
 
-  $("speed").value   = speedLevel;
-  $("marquee").value = marqueeLevel;
+$("speed").value   = speedLevel;
+$("marquee").value = marqueeLevel;
 
-  const bPct = Math.round((st.brightness / 200) * 100);
-  $("brightnessVal").textContent = bPct + "%";
-  $("speedVal").textContent      = "Seviye " + speedLevel   + "/10";
-  $("marqueeVal").textContent    = "Seviye " + marqueeLevel + "/10";
-  
-  $("effect").value = st.effect;
-  
+const bPct = Math.round((st.brightness / 200) * 100);
+$("brightnessVal").textContent = bPct + "%";
+$("speedVal").textContent      = "Seviye " + speedLevel   + "/10";
+$("marqueeVal").textContent    = "Seviye " + marqueeLevel + "/10";
 
-  
-  $("pirState").textContent = st.pir ? "Hareket Var" : "Yok";
-  
-  $("pirState").style.background = st.pir ? "#f97316" : "#1e293b";
-  
+$("effect").value = st.effect;
 
-  
-  $("btnPir").textContent = st.pir_enabled ? "Sensör: Açık" : "Sensör: Kapalı";
-  
-  $("btnPir").className = st.pir_enabled ? "secondary" : "danger";
-  
+$("pirState").textContent = st.pir ? "Hareket Var" : "Yok";
 
-  
-  $("btnPlay").textContent = st.paused ? "Devam Et" : "Durdur";
-  
+$("pirState").style.background = st.pir ? "#f97316" : "#1e293b";
 
-  
-  $("textMsg").placeholder = "I LOVE YOU NAZAN";
-  
+$("btnPir").textContent = st.pir_enabled ? "Sensör: Açık" : "Sensör: Kapalı";
 
-  
-  $("autoMinutes").value = Math.round(st.absence_ms / 60000);
-  
+$("btnPir").className = st.pir_enabled ? "secondary" : "danger";
 
-  
-  const devStr = formatDeviceTime(st.epoch, st.tz_min || 0);
-  
-  if ($("devTime")) $("devTime").textContent = devStr;
-  
+$("btnPlay").textContent = st.paused ? "Devam Et" : "Durdur";
+
+$("textMsg").placeholder = "Yazıyı Giriniz...";
+
+$("autoMinutes").value = Math.round(st.absence_ms / 60000);
+
+const devStr = formatDeviceTime(st.epoch, st.tz_min || 0);
+
+if ($("devTime")) $("devTime").textContent = devStr;
+
 }
-  
 
-  
 function refreshState() {
-  
-  apiGet("/api/state").then(updateFromState);
-  
-}
-  
 
-  
+apiGet("/api/state").then(updateFromState);
+
+}
+
 $("brightness").addEventListener("input", (e) => {
-  
-  const v = Number(e.target.value);
-  
-  $("brightnessVal").textContent = Math.round((v / 200) * 100) + "%";
-  
+
+const v = Number(e.target.value);
+
+$("brightnessVal").textContent = Math.round((v / 200) * 100) + "%";
+
 });
-  
+
 $("brightness").addEventListener("change", (e) => {
-  
-  const v = e.target.value;
-  
-  fetch("/api/brightness?value=" + v);
-  
+
+const v = e.target.value;
+
+fetch("/api/brightness?value=" + v);
+
 });
-  
+
 $("speed").addEventListener("input", (e) => {
-  const lvl = Number(e.target.value);   
-  $("speedVal").textContent = "Seviye " + lvl + "/10";
+const lvl = Number(e.target.value);
+$("speedVal").textContent = "Seviye " + lvl + "/10";
 });
 $("speed").addEventListener("change", (e) => {
-  const lvl = Number(e.target.value);   
-  const mapped = Math.min(400, Math.max(1, Math.round(lvl * 40))); 
-  fetch("/api/speed?value=" + mapped);
+const lvl = Number(e.target.value);
+const mapped = Math.min(400, Math.max(1, Math.round(lvl * 40)));
+fetch("/api/speed?value=" + mapped);
 });
-
 
 $("marquee").addEventListener("input", (e) => {
-  const lvl = Number(e.target.value);   
-  $("marqueeVal").textContent = "Seviye " + lvl + "/10";
+const lvl = Number(e.target.value);
+$("marqueeVal").textContent = "Seviye " + lvl + "/10";
 });
 $("marquee").addEventListener("change", (e) => {
-  const lvl = Number(e.target.value);   
-  const mapped = Math.min(400, Math.max(1, Math.round(lvl * 40)));
-  fetch("/api/marqueespeed?value=" + mapped);
+const lvl = Number(e.target.value);
+const mapped = Math.min(400, Math.max(1, Math.round(lvl * 40)));
+fetch("/api/marqueespeed?value=" + mapped);
 });
- 
+
 $("btnPower").addEventListener("click", () => {
-  
-  apiGet("/api/state").then(st => {
-  
-    if (!st) return;
-  
-    const newVal = st.power ? 0 : 1;
-  
-    fetch("/api/power?value=" + newVal).then(() => setTimeout(refreshState, 200));
-  
-  });
-  
-});
-  
 
-  
+apiGet("/api/state").then(st => {
+
+if (!st) return;
+
+const newVal = st.power ? 0 : 1;
+
+fetch("/api/power?value=" + newVal).then(() => setTimeout(refreshState, 200));
+
+});
+
+});
+
 $("btnPir").addEventListener("click", () => {
-  
-  apiGet("/api/state").then(st => {
-  
-    if (!st) return;
-  
-    const en = st.pir_enabled ? 0 : 1;
-  
-    fetch("/api/pir?enable=" + en).then(() => setTimeout(refreshState, 200));
-  
-  });
-  
-});
-  
 
-  
+apiGet("/api/state").then(st => {
+
+if (!st) return;
+
+const en = st.pir_enabled ? 0 : 1;
+
+fetch("/api/pir?enable=" + en).then(() => setTimeout(refreshState, 200));
+
+});
+
+});
+
 $("btnSolidWhite").addEventListener("click", () => fetch("/api/solid?color=white").then(refreshState));
-  
+
 $("btnSolidRed").addEventListener("click",   () => fetch("/api/solid?color=red").then(refreshState));
-  
+
 $("btnSolidGreen").addEventListener("click", () => fetch("/api/solid?color=green").then(refreshState));
-  
+
 $("btnSolidBlue").addEventListener("click",  () => fetch("/api/solid?color=blue").then(refreshState));
-  
 
-  
 $("btnPlay").addEventListener("click", () => {
-  
-  apiGet("/api/state").then(st => {
-  
-    if (!st) return;
-  
-    const nv = st.paused ? 0 : 1;
-  
-    fetch("/api/play?value=" + nv).then(() => setTimeout(refreshState, 200));
-  
-  });
-  
+
+apiGet("/api/state").then(st => {
+
+if (!st) return;
+
+const nv = st.paused ? 0 : 1;
+
+fetch("/api/play?value=" + nv).then(() => setTimeout(refreshState, 200));
+
 });
-  
+
+});
+
 $("btnNextFx").addEventListener("click", () => {
-  
-  fetch("/api/solid?color=none")
-  
-    .then(() => setTimeout(refreshState, 200));
-  
+
+fetch("/api/solid?color=none")
+
+.then(() => setTimeout(refreshState, 200));
+
 });
-  
 
-  
-
-  
 $("btnSendText").addEventListener("click", () => {
-  
-  const msg = $("textMsg").value || "";
-  
-  const enc = encodeURIComponent(msg);
-  
-  fetch("/api/text?msg=" + enc).then(() => setTimeout(refreshState, 300));
-  
-});
-  
 
-  
+const msg = $("textMsg").value || "";
+
+const enc = encodeURIComponent(msg);
+
+fetch("/api/text?msg=" + enc).then(() => setTimeout(refreshState, 300));
+
+});
+
 $("btnResetOffset").addEventListener("click", () => {
-  
-  $("textMsg").value = "I LOVE YOU NAZAN";
-  
-  fetch("/api/resetoffset").then(() => setTimeout(refreshState, 200));
-  
-});
-  
 
-  
+$("textMsg").value = "I LOVE YOU NAZAN";
+
+fetch("/api/resetoffset").then(() => setTimeout(refreshState, 200));
+
+});
+
 $("btnSetSchedule").addEventListener("click", () => {
-  
-  const onT = $("onTime").value;
-  
-  const offT = $("offTime").value;
-  
-  const absM = $("autoMinutes").value || "1";
-  
-  let qs = "/api/auto?abs=" + encodeURIComponent(absM);
-  
-  fetch(qs).then(() => {
-  
-    let q2 = "/api/pirschedule?";
-  
-    const parts = [];
-  
-    if (onT)  parts.push("on="  + encodeURIComponent(onT));
-  
-    if (offT) parts.push("off=" + encodeURIComponent(offT));
-  
-    q2 += parts.join("&");
-  
-    if (parts.length > 0) {
-  
-      fetch(q2).then(() => setTimeout(refreshState, 400));
-  
-    } else {
-  
-      setTimeout(refreshState, 200);
-  
-    }
-  
-  });
-  
-});
-  
 
-  
+const onT = $("onTime").value;
+
+const offT = $("offTime").value;
+
+const absM = $("autoMinutes").value || "1";
+
+let qs = "/api/auto?abs=" + encodeURIComponent(absM);
+
+fetch(qs).then(() => {
+
+let q2 = "/api/pirschedule?";
+
+const parts = [];
+
+if (onT)  parts.push("on="  + encodeURIComponent(onT));
+
+if (offT) parts.push("off=" + encodeURIComponent(offT));
+
+q2 += parts.join("&");
+
+if (parts.length > 0) {
+
+fetch(q2).then(() => setTimeout(refreshState, 400));
+
+} else {
+
+setTimeout(refreshState, 200);
+
+}
+
+});
+
+});
+
 $("btnSyncTime").addEventListener("click", () => {
-  
-  const epoch = Math.floor(Date.now() / 1000);
-  
-  const tzmin = -new Date().getTimezoneOffset();
-  
-  const url = "/api/settime?epoch=" + epoch + "&tzmin=" + tzmin;
-  
-  fetch(url).then(() => setTimeout(refreshState, 300));
-  
-});
-  
 
-  
+const epoch = Math.floor(Date.now() / 1000);
+
+const tzmin = -new Date().getTimezoneOffset();
+
+const url = "/api/settime?epoch=" + epoch + "&tzmin=" + tzmin;
+
+fetch(url).then(() => setTimeout(refreshState, 300));
+
+});
+
 $("btnOta").addEventListener("click", () => {
-  
-  window.location.href = "/update";
-  
+
+window.location.href = "/update";
+
 });
-  
 
-  
 (function(){
-  
-  const pad = $("touchpad");
-  
-  let active = false;
-  
 
-  
-  function sendTouch(evt){
-  
-    const rect = pad.getBoundingClientRect();
-  
-    const x = (evt.touches ? evt.touches[0].clientX : evt.clientX) - rect.left;
-  
-    const y = (evt.touches ? evt.touches[0].clientY : evt.clientY) - rect.top;
-  
-    const nx = Math.min(Math.max(x / rect.width, 0), 1);
-  
-    const ny = Math.min(Math.max(y / rect.height, 0), 1);
-  
-    fetch("/api/touch?x=" + nx + "&y=" + ny);
-  
-  }
-  
+const pad = $("touchpad");
 
-  
-  pad.addEventListener("mousedown", (e) => {
-  
-    active = true;
-  
-    sendTouch(e);
-  
-  });
-  
-  pad.addEventListener("mousemove", (e) => {
-  
-    if (!active) return;
-  
-    sendTouch(e);
-  
-  });
-  
-  window.addEventListener("mouseup", () => active = false);
-  
+let active = false;
 
-  
-  pad.addEventListener("touchstart", (e) => {
-  
-    active = true;
-  
-    sendTouch(e);
-  
-    e.preventDefault();
-  
-  }, {passive:false});
-  
-  pad.addEventListener("touchmove", (e) => {
-  
-    if (!active) return;
-  
-    sendTouch(e);
-  
-    e.preventDefault();
-  
-  }, {passive:false});
-  
-  pad.addEventListener("touchend", () => {
-  
-    active = false;
-  
-  });
-  
+function sendTouch(evt){
+
+const rect = pad.getBoundingClientRect();
+
+const x = (evt.touches ? evt.touches[0].clientX : evt.clientX) - rect.left;
+
+const y = (evt.touches ? evt.touches[0].clientY : evt.clientY) - rect.top;
+
+const nx = Math.min(Math.max(x / rect.width, 0), 1);
+
+const ny = Math.min(Math.max(y / rect.height, 0), 1);
+
+fetch("/api/touch?x=" + nx + "&y=" + ny);
+
+}
+
+pad.addEventListener("mousedown", (e) => {
+
+active = true;
+
+sendTouch(e);
+
+});
+
+pad.addEventListener("mousemove", (e) => {
+
+if (!active) return;
+
+sendTouch(e);
+
+});
+
+window.addEventListener("mouseup", () => active = false);
+
+pad.addEventListener("touchstart", (e) => {
+
+active = true;
+
+sendTouch(e);
+
+e.preventDefault();
+
+}, {passive:false});
+
+pad.addEventListener("touchmove", (e) => {
+
+if (!active) return;
+
+sendTouch(e);
+
+e.preventDefault();
+
+}, {passive:false});
+
+pad.addEventListener("touchend", () => {
+
+active = false;
+
+});
+
 })();
-  
 
-  
 refreshState();
-  
+
 setInterval(refreshState, 3000);
-  
+
 </script></body></html>)HTML";
 
 inline void sendJson200(const String& body) {
@@ -2152,9 +1946,9 @@ int v=server.arg("effect").toInt();
 
 if(v>=0 && v<FX_COUNT){
 
-  gEffect=v;
+gEffect=v;
 
-  FastLED.clear(true);
+FastLED.clear(true);
 
 }
 
@@ -2214,35 +2008,35 @@ bool newPower=(server.arg("value").toInt()!=0);
 
 if(!newPower && gPower){
 
-  gPIRDelayStart = millis();
+gPIRDelayStart = millis();
 
-  gFadeActive = false;
+gFadeActive = false;
 
-  gAutoOffAtMs = 0;
+gAutoOffAtMs = 0;
 
-  gPendingOff = OFF_MANUAL;
+gPendingOff = OFF_MANUAL;
 
-  gIgnorePirUntilMs = millis() + 2000UL;
+gIgnorePirUntilMs = millis() + 2000UL;
 
-  if (gBrightness > 0) gLastUserBrightness = gBrightness;
+if (gBrightness > 0) gLastUserBrightness = gBrightness;
 
-  startFadeTo(0, gBrightness);
+startFadeTo(0, gBrightness);
 
 } else if (newPower && !gPower){
 
-  gPIRDelayStart = 0;
+gPIRDelayStart = 0;
 
-  gFadeActive = false;
+gFadeActive = false;
 
-  gLastMotionMs = millis();
+gLastMotionMs = millis();
 
-  gAutoOffAtMs = 0;
+gAutoOffAtMs = 0;
 
-  gPower = true;
+gPower = true;
 
-  uint8_t target = (gLastUserBrightness>0)? gLastUserBrightness : 140;
+uint8_t target = (gLastUserBrightness>0)? gLastUserBrightness : 140;
 
-  startFadeTo(target, 0);
+startFadeTo(target, 0);
 
 }
 
@@ -2264,23 +2058,23 @@ c.toLowerCase();
 
 if(c=="white"||c=="red"||c=="green"||c=="blue"){
 
-  gSolidMode=true;
+gSolidMode=true;
 
-  if(c=="white")gSolidColor=CRGB::White;
+if(c=="white")gSolidColor=CRGB::White;
 
-  else if(c=="red")gSolidColor=CRGB::Red;
+else if(c=="red")gSolidColor=CRGB::Red;
 
-  else if(c=="green")gSolidColor=CRGB::Green;
+else if(c=="green")gSolidColor=CRGB::Green;
 
-  else if(c=="blue")gSolidColor=CRGB::Blue;
+else if(c=="blue")gSolidColor=CRGB::Blue;
 
-  gFadeActive = false;
+gFadeActive = false;
 
 } else if(c=="none"){
 
-  gSolidMode=false;
+gSolidMode=false;
 
-  gFadeActive=false;
+gFadeActive=false;
 
 }
 
@@ -2336,9 +2130,9 @@ float y = server.arg("y").toFloat();
 
 if(x<=1.0f && y<=1.0f){
 
-  x*= (LED_COLS-1);
+x*= (LED_COLS-1);
 
-  y*=(LED_ROWS-1);
+y*=(LED_ROWS-1);
 
 }
 
@@ -2402,15 +2196,15 @@ gPirEnabled = (v != 0);
 
 if (!gPirEnabled) {
 
-  gPIRDelayStart = 0;
+gPIRDelayStart = 0;
 
-  gAutoOffAtMs   = 0;
+gAutoOffAtMs   = 0;
 
-  gLastMotionMs  = millis();
+gLastMotionMs  = millis();
 
 } else {
 
-  gLastMotionMs  = millis();
+gLastMotionMs  = millis();
 
 }
 
@@ -2574,15 +2368,15 @@ HTTPUpload& upload = server.upload();
 
 if (upload.status == UPLOAD_FILE_START) {
 
-  Update.begin();
+Update.begin();
 
 } else if (upload.status == UPLOAD_FILE_WRITE) {
 
-  Update.write(upload.buf, upload.currentSize);
+Update.write(upload.buf, upload.currentSize);
 
 } else if (upload.status == UPLOAD_FILE_END) {
 
-  Update.end(true);
+Update.end(true);
 
 }
 
@@ -2622,37 +2416,37 @@ uint16_t minOfDay;
 
 if (localDayAndMinute(dayIdx, minOfDay)) {
 
-  if (dayIdx != schedDayIndex) {
+if (dayIdx != schedDayIndex) {
 
-    schedDayIndex = dayIdx;
+schedDayIndex = dayIdx;
 
-    appliedOnToday = false;
+appliedOnToday = false;
 
-    appliedOffToday = false;
+appliedOffToday = false;
 
-  }
+}
 
-  if (pirOffMin >= 0 && minOfDay == (uint16_t)pirOffMin && !appliedOffToday) {
+if (pirOffMin >= 0 && minOfDay == (uint16_t)pirOffMin && !appliedOffToday) {
 
-    gPirEnabled = false;
+gPirEnabled = false;
 
-    appliedOffToday = true;
+appliedOffToday = true;
 
-    Serial.println("[SCHEDULE] PIR OFF tek-atım uygulandı");
+Serial.println("[SCHEDULE] PIR OFF tek-atım uygulandı");
 
-  }
+}
 
-  if (pirOnMin >= 0 && minOfDay == (uint16_t)pirOnMin && !appliedOnToday) {
+if (pirOnMin >= 0 && minOfDay == (uint16_t)pirOnMin && !appliedOnToday) {
 
-    gPirEnabled = true;
+gPirEnabled = true;
 
-    appliedOnToday = true;
+appliedOnToday = true;
 
-    gLastMotionMs = millis();
+gLastMotionMs = millis();
 
-    Serial.println("[SCHEDULE] PIR ON tek-atım uygulandı");
+Serial.println("[SCHEDULE] PIR ON tek-atım uygulandı");
 
-  }
+}
 
 }
 
@@ -2664,65 +2458,63 @@ uint32_t currentTime = millis();
 
 if (gAutoOffAtMs != 0) {
 
-  if (pirIsHighStable(currentTime)) {
+if (pirIsHighStable(currentTime)) {
 
-    uint32_t sinceOff = currentTime - gAutoOffAtMs;
+uint32_t sinceOff = currentTime - gAutoOffAtMs;
 
-    if (sinceOff <= restoreWindowMs && gHasSavedState) {
+if (sinceOff <= restoreWindowMs && gHasSavedState) {
 
-      restoreSavedStateWithFade();
+restoreSavedStateWithFade();
 
-      gAutoOffAtMs = 0;
+gAutoOffAtMs = 0;
 
-      gPIRDelayStart = 0;
+gPIRDelayStart = 0;
 
-      gLastMotionMs = currentTime;
+gLastMotionMs = currentTime;
 
-    } else {
+} else {
 
-      gPower = true;
+gPower = true;
 
-      gSolidMode = true;
+gSolidMode = true;
 
-      gSolidColor = CRGB::White;
+gSolidColor = CRGB::White;
 
-      startFadeTo(PIR_FADE_TARGET_BRIGHTNESS, 0);
+startFadeTo(PIR_FADE_TARGET_BRIGHTNESS, 0);
 
-      gAutoOffAtMs = 0;
+gAutoOffAtMs = 0;
 
-      gPIRDelayStart = 0;
+gPIRDelayStart = 0;
 
-      gLastMotionMs = currentTime;
-
-    }
-
-  }
-
-  delay(10);
-
-  return;
+gLastMotionMs = currentTime;
 
 }
 
+}
 
+delay(10);
+
+return;
+
+}
 
 if (gPIRDelayStart != 0 && (currentTime - gPIRDelayStart) >= PIR_DELAY_MS) {
 
-  if (pirIsHighStable(currentTime)) {
+if (pirIsHighStable(currentTime)) {
 
-    gPower = true;
+gPower = true;
 
-    gSolidMode = true;
+gSolidMode = true;
 
-    gSolidColor = CRGB::White;
+gSolidColor = CRGB::White;
 
-    startFadeTo(PIR_FADE_TARGET_BRIGHTNESS, 0);
+startFadeTo(PIR_FADE_TARGET_BRIGHTNESS, 0);
 
-    gPIRDelayStart = 0;
+gPIRDelayStart = 0;
 
-    gLastMotionMs = currentTime;
+gLastMotionMs = currentTime;
 
-  }
+}
 
 }
 
@@ -2740,7 +2532,7 @@ gLastPirSampleMs = nowMs;
 
 if (pirIsHighStable(nowMs)) {
 
-  gLastMotionMs = nowMs;
+gLastMotionMs = nowMs;
 
 }
 
@@ -2768,43 +2560,43 @@ uint32_t tnow = millis();
 
 if (tnow - gLastFadeStepMs >= 5) {
 
-  gLastFadeStepMs = tnow;
+gLastFadeStepMs = tnow;
 
-  if (gBrightness < gFadeTarget) {
+if (gBrightness < gFadeTarget) {
 
-    gBrightness++;
+gBrightness++;
 
-    FastLED.setBrightness(gBrightness);
+FastLED.setBrightness(gBrightness);
 
-  } else if (gBrightness > gFadeTarget) {
+} else if (gBrightness > gFadeTarget) {
 
-    gBrightness--;
+gBrightness--;
 
-    FastLED.setBrightness(gBrightness);
+FastLED.setBrightness(gBrightness);
 
-  } else {
+} else {
 
-    gFadeActive = false;
+gFadeActive = false;
 
-    FastLED.setBrightness(gFadeTarget);
+FastLED.setBrightness(gFadeTarget);
 
-    if (gFadeTarget > 0) gLastUserBrightness = gFadeTarget;
+if (gFadeTarget > 0) gLastUserBrightness = gFadeTarget;
 
-    if (gFadeTarget == 0 && gPendingOff != OFF_NONE) {
+if (gFadeTarget == 0 && gPendingOff != OFF_NONE) {
 
-      FastLED.clear(true);
+FastLED.clear(true);
 
-      FastLED.show();
+FastLED.show();
 
-      gPower = false;
+gPower = false;
 
-      gPendingOff = OFF_NONE;
+gPendingOff = OFF_NONE;
 
-      return;
+return;
 
-    }
+}
 
-  }
+}
 
 }
 
@@ -2822,29 +2614,29 @@ FastLED.clear();
 
 if(gSolidMode){
 
-  for(uint8_t y=0;y<LED_ROWS;y++)
+for(uint8_t y=0;y<LED_ROWS;y++)
 
-    for(uint8_t x=0;x<LED_COLS;x++)
+for(uint8_t x=0;x<LED_COLS;x++)
 
-      setXY(x,y,gSolidColor);
+setXY(x,y,gSolidColor);
 
 }else{
 
-  if (touchBoost) {
+if (touchBoost) {
 
-    for(uint8_t y=0;y<LED_ROWS;y++)
+for(uint8_t y=0;y<LED_ROWS;y++)
 
-      for(uint8_t x=0;x<LED_COLS;x++)
+for(uint8_t x=0;x<LED_COLS;x++)
 
-        addXY(x,y, CHSV(gHue, 40, 3));
+addXY(x,y, CHSV(gHue, 40, 3));
 
-  } else {
+} else {
 
-    effects[gEffect % FX_COUNT](t);
+effectsgEffect % FX_COUNT;
 
-    gHue++;
+gHue++;
 
-  }
+}
 
 }
 
@@ -2854,28 +2646,25 @@ for(uint8_t i=0;i<MAX_DOTS;i++){
 
 if(dots[i].life>0){
 
-  setXY((uint8_t)dots[i].x, (uint8_t)dots[i].y, CHSV(gHue+i*3, 180, (uint8_t)(dots[i].life*255)));
+setXY((uint8_t)dots[i].x, (uint8_t)dots[i].y, CHSV(gHue+i3, 180, (uint8_t)(dots[i].life255)));
 
-  dots[i].life -= 0.03f;
+dots[i].life -= 0.03f;
 
-  if(dots[i].life<0.0f) dots[i].life=0.0f;
-
+if(dots[i].life<0.0f) dots[i].life=0.0f;
 }
-
 }
-
 FastLED.show();
 
-static uint32_t last=0;
+static uint32_t last = 0;
 
-uint16_t d=frameDelayMs();
+uint16_t d = frameDelayMs();
 
-if (touchBoost) d = max<uint16_t>(2, d/3);
+if (touchBoost) d = 2;
 
-uint32_t e=millis()-last;
+uint32_t e = millis() - last;
 
-if(e<d) delay(d-e);
+if (e < d) delay(d - e);
 
-last=millis();
+last = millis();
 
 }
