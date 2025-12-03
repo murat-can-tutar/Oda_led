@@ -25,6 +25,11 @@ jobs:
           arduino-cli core update-index
           arduino-cli core install esp32:esp32
 
+      - name: Kütüphaneleri yükle
+        run: |
+          arduino-cli lib install FastLED
+          arduino-cli lib install ESPAsyncWebServer || true
+
       - name: Sketch derle (Oda_led.ino)
         run: |
           mkdir -p build
