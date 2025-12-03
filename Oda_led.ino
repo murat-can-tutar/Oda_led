@@ -2632,7 +2632,7 @@ addXY(x,y, CHSV(gHue, 40, 3));
 
 } else {
 
-effectsgEffect % FX_COUNT;
+effects[gEffect % FX_COUNT](t);
 
 gHue++;
 
@@ -2646,7 +2646,11 @@ for(uint8_t i=0;i<MAX_DOTS;i++){
 
 if(dots[i].life>0){
 
-setXY((uint8_t)dots[i].x, (uint8_t)dots[i].y, CHSV(gHue+i3, 180, (uint8_t)(dots[i].life255)));
+setXY(
+  (uint8_t)dots[i].x,
+  (uint8_t)dots[i].y,
+  CHSV(gHue + i * 3, 180, (uint8_t)(dots[i].life * 255))
+);
 
 dots[i].life -= 0.03f;
 
