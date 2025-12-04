@@ -1213,7 +1213,9 @@ function minutesToHHMM(min) {
     $("statusBadge").style.background = "#2563eb";
 } 
 $("brightness").value = st.brightness;
-$("speed").value      = st.speed;
+const displayedSpeed = Math.round(st.speed / 40);
+$("speed").value = displayedSpeed;
+$("speedVal").textContent = "Seviye " + displayedSpeed + "/10";
 $("marquee").value    = st.marqueespeed;
 
 const autoInput = $("autoMinutes");
