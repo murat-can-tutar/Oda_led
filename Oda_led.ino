@@ -244,7 +244,7 @@ inline void addXY(uint8_t x, uint8_t y, CRGB c) {
 uint8_t gHue = 0;
 bool gPower = true;
 uint8_t gBrightness = 140;
-uint8_t gSpeed = 100;
+uint8_t gSpeed = 5;
 uint8_t gEffect = 0;
 bool gSolidMode = false;
 CRGB gSolidColor = CRGB::White;
@@ -254,7 +254,7 @@ uint8_t gLastUserBrightness = 140;
 String gText = "I LOVE YOU NAZAN";
 int gTextOffset = LED_COLS;
 uint8_t gTextHue = 0;
-uint8_t gMarqueeSpeed = 100;
+uint8_t gMarqueeSpeed = 5;
 
 uint32_t gPIRDelayStart = 0;
 bool gFadeActive = false;
@@ -389,7 +389,7 @@ inline void spawnDot(float x, float y) {
 }
 
 inline uint16_t frameDelayMs() {
-  return map(gSpeed, 1, 400, 80, 2);
+  return map(gSpeed, 1, 10, 200, 1);
 }
 
 struct Glyph { uint8_t ch; uint8_t col[5]; };
@@ -739,15 +739,8 @@ void fxMarquee(uint32_t t) {
   int startY = (LED_ROWS - 5) / 2;
   drawString(gTextOffset, startY, gText, c);
 
-  uint8_t speedMod;
-  uint16_t ms = gMarqueeSpeed;
-
-  if (ms <= 10) speedMod = 12;
-  else if (ms >= 200) speedMod = 1;
-
-  speedMod = map(gMarqueeSpeed, 1, 400, 20, 1);
-  if (speedMod == 0) speedMod = 1;
-
+  uint8_t speedMod = map(gMarqueeSpeed, 1, 10, 20, 1);
+if (speedMod == 0) speedMod = 1;
   int w = gText.length() * 8 - 3;
   if ((t % speedMod) == 0) gTextOffset -= 1;
   if (gTextOffset < -w) gTextOffset = LED_COLS;
@@ -1125,7 +1118,7 @@ input[type="text"]:focus {
     </div>
     <div class="slider-row">
       <span>Yazı Hızı</span>
-      <input id="marquee" type="range" min="1" max="400" value="100" />
+      <input id="marquee" type="range" min="1" max="10" value="5" />
       <span id="marqueeVal">25%</span>
     </div>
   </div>
@@ -1198,23 +1191,14 @@ function updateFromState(st) {
   $("statusBadge").textContent = st.power ? "Açık" : "Kapalı";
   $("statusBadge").style.background = st.power ? "#16a34a" : "#1e293b";
 
-  $("brightness").value = st.brightness;
+$("brightness").value = st.brightness;
+$("speed").value      = st.speed;
+$("marquee").value    = st.marqueespeed;
 
-  let speedLevel   = Math.round(st.speed / 40);
-  let marqueeLevel = Math.round(st.marqueespeed / 40);
-
-  if (speedLevel   < 1)  speedLevel   = 1;
-  if (speedLevel   > 10) speedLevel   = 10;
-  if (marqueeLevel < 1)  marqueeLevel = 1;
-  if (marqueeLevel > 10) marqueeLevel = 10;
-
-  $("speed").value   = speedLevel;
-  $("marquee").value = marqueeLevel;
-
-  const bPct = Math.round((st.brightness / 200) * 100);
-  $("brightnessVal").textContent = bPct + "%";
-  $("speedVal").textContent      = "Seviye " + speedLevel   + "/10";
-  $("marqueeVal").textContent    = "Seviye " + marqueeLevel + "/10";
+const bPct = Math.round((st.brightness / 200) * 100);
+$("brightnessVal").textContent = bPct + "%";
+$("speedVal").textContent      = "Seviye " + st.speed + "/10";
+$("marqueeVal").textContent    = "Seviye " + st.marqueespeed + "/10";
 
   $("effect").value = st.effect;
 
@@ -1252,22 +1236,22 @@ $("speed").addEventListener("input", (e) => {
   const lvl = Number(e.target.value);
   $("speedVal").textContent = "Seviye " + lvl + "/10";
 });
-
 $("speed").addEventListener("change", (e) => {
   const lvl = Number(e.target.value);
-  const mapped = Math.min(400, Math.max(1, Math.round(lvl * 40)));
-  fetch("/api/speed?value=" + mapped);
+  fetch("/api/speed?value=" + lvl);
 });
 
 $("marquee").addEventListener("input", (e) => {
   const lvl = Number(e.target.value);
   $("marqueeVal").textContent = "Seviye " + lvl + "/10";
 });
-
 $("marquee").addEventListener("change", (e) => {
   const lvl = Number(e.target.value);
-  const mapped = Math.min(400, Math.max(1, Math.round(lvl * 40)));
-  fetch("/api/marqueespeed?value=" + mapped);
+  fetch("/api/marqueespeed?value=" + lvl);
+});
+$("effect").addEventListener("change", (e) => {
+  const v = Number(e.target.value);
+  fetch("/api/set?effect=" + v).then(() => setTimeout(refreshState, 200));
 });
 
 $("btnPower").addEventListener("click", () => {
@@ -1432,14 +1416,14 @@ void handleBrightness() {
 
 void handleSpeed() {
   if (server.hasArg("value")) {
-    gSpeed = constrain(server.arg("value").toInt(), 1, 400);
+    gSpeed = constrain(server.arg("value").toInt(), 1, 10);
   }
   sendJson200(jsonState());
 }
 
 void handleMarqueeSpeed() {
   if (server.hasArg("value")) {
-    gMarqueeSpeed = constrain(server.arg("value").toInt(), 1, 400);
+    gMarqueeSpeed = constrain(server.arg("value").toInt(), 1, 10);
   }
   sendJson200(jsonState());
 }
