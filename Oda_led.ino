@@ -389,7 +389,7 @@ inline void spawnDot(float x, float y) {
 }
 
 inline uint16_t frameDelayMs() {
-  return map(gSpeed, 1, 10, 200, 1);
+  return map(gSpeed, 1, 400, 60, 10);
 }
 
 struct Glyph { uint8_t ch; uint8_t col[5]; };
@@ -1059,7 +1059,21 @@ input[type="text"]:focus {
     padding: 12px 32px;
   }
 }
-</style></head>
+.top-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 28px;
+    padding: 0 12px;
+}
+</style>
+</head>
 <body>
 <div class="container">
 
@@ -1067,16 +1081,15 @@ input[type="text"]:focus {
 id="statusBadge" class="badge">Bağlanıyor...</span></h2>
    
 <div class="row">
-  <div class="toggle-row">
+  <div class="top-controls">
     <button id="btnPower">Güç</button>
-    <button id="btnPir" class="secondary">Sensör</button>
-  </div>
-  <div class="toggle-row">
-    <span class="small">Hareket:</span>
+    <button id="btnPir">Sensör</button>
+
     <span id="pirState" class="badge">Hareket</span>
-    <span class="small">Saat:</span>
+
+    <span>Saat:</span>
     <span id="devTime" class="badge">--:--</span>
-  </div>
+</div>
 </div>
 
   <div class="card">
@@ -1188,7 +1201,12 @@ function formatDeviceTime(epoch, tzMin) {
 
 function updateFromState(st) {
   if (!st) return;
-
+function minutesToHHMM(min) {
+    if (min == null || min < 0) return "";
+    const h = Math.floor(min / 60);
+    const m = min % 60;
+    return String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
+}
  if ($("statusBadge").textContent !== "Bağlandı") {
     $("statusBadge").textContent = "Bağlandı";
     $("statusBadge").style.background = "#2563eb";
@@ -1197,6 +1215,19 @@ $("brightness").value = st.brightness;
 $("speed").value      = st.speed;
 $("marquee").value    = st.marqueespeed;
 
+const autoInput = $("autoMinutes");
+if (document.activeElement !== autoInput) {
+    autoInput.value = Math.round(st.absence_ms / 60000);
+}
+const onInput = $("onTime");
+if (onInput && typeof st.pir_on_min === "number" && st.pir_on_min >= 0 && document.activeElement !== onInput) {
+    onInput.value = minutesToHHMM(st.pir_on_min);
+}
+
+const offInput = $("offTime");
+if (offInput && typeof st.pir_off_min === "number" && st.pir_off_min >= 0 && document.activeElement !== offInput) {
+    offInput.value = minutesToHHMM(st.pir_off_min);
+}
 const bPct = Math.round((st.brightness / 200) * 100);
 $("brightnessVal").textContent = bPct + "%";
 $("speedVal").textContent      = "Seviye " + st.speed + "/10";
@@ -1211,21 +1242,32 @@ if (st.pir) {
 } else {
   $("pirState").style.background = "#1e293b";
 }
-  const btnPir = $("btnPir");
-btnPir.textContent = "Sensör";
 
+const btnPir = $("btnPir");
+btnPir.textContent = "Sensör";
+btnPir.className = "";
 if (st.pir_enabled) {
-  btnPir.className = "";
   btnPir.style.background = "#16a34a";
 } else {
-  btnPir.className = "secondary";
-  btnPir.style.background = "";
+  btnPir.style.background = "#dc2626";
 }
+
+const btnPower = $("btnPower");
+btnPower.textContent = "Güç";
+btnPower.className = "";
+if (st.power) {
+  btnPower.style.background = "#16a34a";
+} else {
+  btnPower.style.background = "#dc2626";
+} 
   $("btnPlay").textContent = st.paused ? "Devam Et" : "Durdur";
 
   $("textMsg").placeholder = "Yazıyı Giriniz...";
 
-  $("autoMinutes").value = Math.round(st.absence_ms / 60000);
+  const autoInput = $("autoMinutes");
+if (document.activeElement !== autoInput) {
+    autoInput.value = Math.round(st.absence_ms / 60000);
+}
 
   const devStr = formatDeviceTime(st.epoch, st.tz_min || 0);
   if ($("devTime")) $("devTime").textContent = devStr;
