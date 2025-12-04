@@ -1254,13 +1254,6 @@ $("speed").addEventListener("change", (e) => {
   fetch("/api/speed?value=" + lvl);
 });
 
-const btnPower = $("btnPower");
-if (st.power) {
-  btnPower.style.background = "#16a34a";
-} else {
-  btnPower.style.background = "#1e293b";
-}
-
 $("marquee").addEventListener("input", (e) => {
   const lvl = Number(e.target.value);
   $("marqueeVal").textContent = "Seviye " + lvl + "/10";
