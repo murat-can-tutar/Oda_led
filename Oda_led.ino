@@ -244,7 +244,7 @@ inline void addXY(uint8_t x, uint8_t y, CRGB c) {
 uint8_t gHue = 0;
 bool gPower = true;
 uint8_t gBrightness = 140;
-uint8_t gSpeed = 200;
+uint16_t gSpeed = 200;
 uint8_t gEffect = 0;
 bool gSolidMode = false;
 CRGB gSolidColor = CRGB::White;
