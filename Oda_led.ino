@@ -1134,7 +1134,7 @@ id="statusBadge" class="badge">Bağlanıyor...</span></h2>
     <div class="slider-row">
       <span>Yazı Hızı</span>
       <input id="marquee" type="range" min="1" max="10" value="5" />
-      <span id="marqueeVal">25%</span>
+      <span id="marqueeVal">Seviye 5/10</span>
     </div>
   </div>
 
@@ -1215,8 +1215,7 @@ function minutesToHHMM(min) {
 $("brightness").value = st.brightness;
 const displayedSpeed = Math.round(st.speed / 40);
 $("speed").value = displayedSpeed;
-$("speedVal").textContent = "Seviye " + displayedSpeed + "/10";
-$("marquee").value    = st.marqueespeed;
+$("marquee").value = st.marqueespeed;
 
 const autoInput = $("autoMinutes");
 if (document.activeElement !== autoInput) {
@@ -1385,16 +1384,22 @@ $("btnOta").addEventListener("click", () => {
 
 (function(){
   const pad = $("touchpad");
-  let active = false;
+let active = false;
+let lastTouchSend = 0;
+const TOUCH_INTERVAL = 40;
 
-  function sendTouch(evt){
-    const rect = pad.getBoundingClientRect();
-    const x = (evt.touches ? evt.touches[0].clientX : evt.clientX) - rect.left;
-    const y = (evt.touches ? evt.touches[0].clientY : evt.clientY) - rect.top;
-    const nx = Math.min(Math.max(x / rect.width, 0), 1);
-    const ny = Math.min(Math.max(y / rect.height, 0), 1);
-    fetch("/api/touch?x=" + nx + "&y=" + ny);
-  }
+function sendTouch(evt){
+  const now = performance.now();
+  if (now - lastTouchSend < TOUCH_INTERVAL) return;
+  lastTouchSend = now;
+
+  const rect = pad.getBoundingClientRect();
+  const x = (evt.touches ? evt.touches[0].clientX : evt.clientX) - rect.left;
+  const y = (evt.touches ? evt.touches[0].clientY : evt.clientY) - rect.top;
+  const nx = Math.min(Math.max(x / rect.width, 0), 1);
+  const ny = Math.min(Math.max(y / rect.height, 0), 1);
+  fetch("/api/touch?x=" + nx + "&y=" + ny);
+}
 
   pad.addEventListener("mousedown", (e) => {
     active = true;
@@ -1470,7 +1475,7 @@ void handleBrightness() {
 
 void handleSpeed() {
   if (server.hasArg("value")) {
-    gSpeed = constrain(server.arg("value").toInt(), 1, 10);
+    gSpeed = constrain(server.arg("value").toInt(), 1, 400);
   }
   sendJson200(jsonState());
 }
