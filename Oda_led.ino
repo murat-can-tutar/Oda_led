@@ -1264,11 +1264,6 @@ if (st.power) {
 
   $("textMsg").placeholder = "Yazıyı Giriniz...";
 
-  const autoInput = $("autoMinutes");
-if (document.activeElement !== autoInput) {
-    autoInput.value = Math.round(st.absence_ms / 60000);
-}
-
   const devStr = formatDeviceTime(st.epoch, st.tz_min || 0);
   if ($("devTime")) $("devTime").textContent = devStr;
 }
