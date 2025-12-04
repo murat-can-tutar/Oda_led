@@ -1087,8 +1087,9 @@ id="statusBadge" class="badge">Bağlanıyor...</span></h2>
 
     <span id="pirState" class="badge">Hareket</span>
 
-    <span>Saat:</span>
-    <span id="devTime" class="badge">--:--</span>
+<span id="timeBadge" class="badge clock-badge">
+  Saat: <span id="devTime">--:--</span>
+</span>
 </div>
 </div>
 
@@ -1823,22 +1824,30 @@ void loop() {
   uint32_t t = millis();
   bool touchBoost = (millis() < gTouchBoostUntilMs);
 
-  if (!gPaused) {
-    FastLED.clear();
-    if (gSolidMode) {
-      for (uint8_t y = 0; y < LED_ROWS; y++)
-        for (uint8_t x = 0; x < LED_COLS; x++)
-          setXY(x, y, gSolidColor);
+  if(!gPaused){
+
+  FastLED.clear();
+
+  if(gSolidMode){
+
+    for(uint8_t y=0;y<LED_ROWS;y++)
+      for(uint8_t x=0;x<LED_COLS;x++)
+        setXY(x,y,gSolidColor);
+
+  } else {
+
+    // hız adımı: gSpeed 1..400 → 1..8 arası hue adımı
+    uint8_t hueStep = map(gSpeed, 1, 400, 1, 8);
+
+    if (touchBoost) {
+      for(uint8_t y=0;y<LED_ROWS;y++)
+        for(uint8_t x=0;x<LED_COLS;x++)
+          addXY(x,y, CHSV(gHue, 40, 3));
     } else {
-      if (touchBoost) {
-        for (uint8_t y = 0; y < LED_ROWS; y++)
-          for (uint8_t x = 0; x < LED_COLS; x++)
-            addXY(x, y, CHSV(gHue, 40, 3));
-      } else {
-        effects[gEffect % FX_COUNT](t);
-        gHue++;
-      }
+      effects[gEffect % FX_COUNT](t);
+      gHue += hueStep;
     }
+  }
   }
 
   for (uint8_t i = 0; i < MAX_DOTS; i++) {
