@@ -1289,7 +1289,8 @@ $("speed").addEventListener("input", (e) => {
 });
 $("speed").addEventListener("change", (e) => {
   const lvl = Number(e.target.value);
-  fetch("/api/speed?value=" + lvl);
+  const mapped = Math.min(400, Math.max(1, lvl * 40));
+  fetch("/api/speed?value=" + mapped);
 });
 
 $("marquee").addEventListener("input", (e) => {
