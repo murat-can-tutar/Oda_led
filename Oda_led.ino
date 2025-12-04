@@ -1062,21 +1062,22 @@ input[type="text"]:focus {
 </style></head>
 <body>
 <div class="container">
-  <div class="card">
-    <h2>Genel<span id="statusBadge" class="badge">Bağlanıyor...</span></h2>
-    <div class="row">
-      <div class="toggle-row">
-        <button id="btnPower">Güç</button>
-        <button id="btnPir" class="secondary">Sensör:</button>
-      </div>
-      <div class="toggle-row" style="flex:1; justify-content:flex-end; gap:6px;">
-        <span class="small">Saat:</span>
-        <span id="devTime" class="badge">--:--</span>
-        <span class="small">Hareket:</span>
-        <span id="pirState" class="badge">-</span>
-      </div>
-    </div>
+
+  <div class="card"><h2>Genel<span 
+id="statusBadge" class="badge">Bağlanıyor...</span></h2>
+   
+<div class="row">
+  <div class="toggle-row">
+    <button id="btnPower">Güç</button>
+    <button id="btnPir" class="secondary">Sensör</button>
   </div>
+  <div class="toggle-row">
+    <span class="small">Hareket:</span>
+    <span id="pirState" class="badge">Hareket</span>
+    <span class="small">Saat:</span>
+    <span id="devTime" class="badge">--:--</span>
+  </div>
+</div>
 
   <div class="card">
     <h2>Efektler 🌈</h2>
@@ -1188,9 +1189,10 @@ function formatDeviceTime(epoch, tzMin) {
 function updateFromState(st) {
   if (!st) return;
 
-  $("statusBadge").textContent = st.power ? "Açık" : "Kapalı";
-  $("statusBadge").style.background = st.power ? "#16a34a" : "#1e293b";
-
+ if ($("statusBadge").textContent !== "Bağlandı") {
+    $("statusBadge").textContent = "Bağlandı";
+    $("statusBadge").style.background = "#2563eb";
+} 
 $("brightness").value = st.brightness;
 $("speed").value      = st.speed;
 $("marquee").value    = st.marqueespeed;
@@ -1202,12 +1204,23 @@ $("marqueeVal").textContent    = "Seviye " + st.marqueespeed + "/10";
 
   $("effect").value = st.effect;
 
-  $("pirState").textContent = st.pir ? "Hareket Var" : "Yok";
-  $("pirState").style.background = st.pir ? "#f97316" : "#1e293b";
+  $("pirState").textContent = "Hareket";
 
-  $("btnPir").textContent = st.pir_enabled ? "Sensör: Açık" : "Sensör: Kapalı";
-  $("btnPir").className = st.pir_enabled ? "secondary" : "danger";
+if (st.pir) {
+  $("pirState").style.background = "#2563eb";
+} else {
+  $("pirState").style.background = "#1e293b";
+}
+  const btnPir = $("btnPir");
+btnPir.textContent = "Sensör";
 
+if (st.pir_enabled) {
+  btnPir.className = "";
+  btnPir.style.background = "#16a34a";
+} else {
+  btnPir.className = "secondary";
+  btnPir.style.background = "";
+}
   $("btnPlay").textContent = st.paused ? "Devam Et" : "Durdur";
 
   $("textMsg").placeholder = "Yazıyı Giriniz...";
@@ -1240,6 +1253,13 @@ $("speed").addEventListener("change", (e) => {
   const lvl = Number(e.target.value);
   fetch("/api/speed?value=" + lvl);
 });
+
+const btnPower = $("btnPower");
+if (st.power) {
+  btnPower.style.background = "#16a34a";
+} else {
+  btnPower.style.background = "#1e293b";
+}
 
 $("marquee").addEventListener("input", (e) => {
   const lvl = Number(e.target.value);
@@ -1803,7 +1823,7 @@ void loop() {
 
   static uint32_t last = 0;
   uint16_t d = frameDelayMs();
-  if (touchBoost) d = max<uint16_t>(2, d / 3);
+  if (touchBoost) d = 2;
   uint32_t e = millis() - last;
   if (e < d) delay(d - e);
   last = millis();
