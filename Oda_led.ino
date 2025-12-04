@@ -1,10 +1,18 @@
 #include <WiFi.h>
+const char* STA_SSID = "MCT";
+const char* STA_PASS = "MCT.160324";
 #include <WebServer.h>
 #include <FastLED.h>
 #include <EEPROM.h>
 #include <math.h>
 #include <WiFiClient.h>
 #include <Update.h>
+#include <DHT.h>
+
+IPAddress local_IP(192,168,0,50);
+IPAddress gateway(192,168,0,1);
+IPAddress subnet(255,255,255,0);
+IPAddress dns(8,8,8,8);   
 
 extern uint32_t absenceOffMs;
 extern uint32_t restoreWindowMs;
@@ -23,6 +31,27 @@ struct Persist {
   uint32_t gIgnorePirUntilMs;
 };
 
+void setupWifi() {
+  WiFi.mode(WIFI_STA);
+
+  WiFi.config(local_IP, gateway, subnet, dns);
+
+  WiFi.begin(STA_SSID, STA_PASS);
+
+  uint32_t startAttempt = millis();
+  while (WiFi.status() != WL_CONNECTED && millis() - startAttempt < 8000) {
+    delay(200);
+  }
+
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.print("Bağlandı → ");
+    Serial.println(WiFi.localIP());
+  } else {
+    Serial.println("WiFi bağlanamadı, AP moduna geçiliyor...");
+    WiFi.mode(WIFI_AP);
+    WiFi.softAP("MCT LED", "192513");
+  }
+}
 static const uint32_t PERSIST_MAGIC = 0x4D43544C;
 static const uint32_t PERSIST_VERSION = 1;
 
@@ -58,10 +87,17 @@ static inline void savePersist() {
 
 #define LED_PIN 4
 #define PIR_PIN 13
+#define DHTPIN 14
+#define DHTTYPE DHT22
 #define LED_COLS 39
 #define LED_ROWS 16
 #define LED_TYPE WS2812B
 #define COLOR_ORDER BGR
+
+DHT dht(DHTPIN, DHTTYPE);
+float gTempC = NAN;
+float gHumPct = NAN;
+uint32_t gLastDhtReadMs = 0;
 
 static const int INVALID = -1;
 
@@ -322,7 +358,17 @@ int16_t pirOffMin = -1;
 int32_t schedDayIndex = -1;
 bool appliedOnToday = false;
 bool appliedOffToday = false;
+void updateDht() {
+  uint32_t now = millis();
+  if (now - gLastDhtReadMs < 2000) return;
+  gLastDhtReadMs = now;
 
+  float t = dht.readTemperature();
+  float h = dht.readHumidity();
+
+  if (!isnan(t)) gTempC = t;
+  if (!isnan(h)) gHumPct = h;
+}
 void updateDeviceTime() {
   static uint32_t lastUpdateMs = 0;
   uint32_t nowMs = millis();
@@ -835,12 +881,20 @@ String jsonState() {
   s += String(tzOffsetMin);
   s += ",";
 
-  s += "\"pir_on_min\":";
+s += "\"pir_on_min\":";
   s += String(pirOnMin);
   s += ",";
 
   s += "\"pir_off_min\":";
   s += String(pirOffMin);
+  s += ",";
+
+  s += "\"temp_c\":";
+  s += String(gTempC);
+  s += ",";
+
+  s += "\"hum_pct\":";
+  s += String(gHumPct);
   s += ",";
 
   s += "\"epoch\":";
@@ -1077,20 +1131,26 @@ input[type="text"]:focus {
 <body>
 <div class="container">
 
-  <div class="card"><h2>Genel<span 
+<div class="card"><h2>Genel<span 
 id="statusBadge" class="badge">Bağlanıyor...</span></h2>
-   
-<div class="row">
-  <div class="top-controls">
-    <button id="btnPower">Güç</button>
-    <button id="btnPir">Sensör</button>
 
-    <span id="pirState" class="badge">Hareket</span>
+  <div class="row">
+    <!-- 1. satır: Güç / Sensör / Hareket -->
+    <div class="top-controls">
+      <button id="btnPower">Güç</button>
+      <button id="btnPir">Sensör</button>
+      <span id="pirState" class="badge">Hareket</span>
+    </div>
 
-<span id="timeBadge" class="badge clock-badge">
-  Saat: <span id="devTime">--:--</span>
-</span>
-</div>
+    <!-- 2. satır: Sıcaklık / Nem / Saat -->
+    <div class="top-controls">
+      <span id="tempBadge" class="badge">--°C</span>
+      <span id="humBadge" class="badge">--%</span>
+      <span id="timeBadge" class="badge clock-badge">
+        Saat: <span id="devTime">--:--</span>
+      </span>
+    </div>
+  </div>
 </div>
 
   <div class="card">
@@ -1293,11 +1353,20 @@ function updateFromState(st) {
     textMsg.placeholder = "Yazıyı Giriniz...";
   }
 
+  const tempEl = $("tempBadge");
+  if (tempEl && typeof st.temp_c === "number" && st.temp_c > -100) {
+    tempEl.textContent = st.temp_c.toFixed(1) + "°C";
+  }
+
+  const humEl = $("humBadge");
+  if (humEl && typeof st.hum_pct === "number" && st.hum_pct >= 0) {
+    humEl.textContent = st.hum_pct.toFixed(0) + "%";
+  }
+
   const devStr = formatDeviceTime(st.epoch, st.tz_min || 0);
   const devTimeEl = $("devTime");
   if (devTimeEl) devTimeEl.textContent = devStr;
 }
-
 
 function refreshState() {
   apiGet("/api/state").then(st => {
@@ -1665,6 +1734,7 @@ void handlePirSchedule() {
 }
 void setup() {
   Serial.begin(115200);
+  setupWifi();
   delay(50);
 
   EEPROM.begin(EEPROM_SIZE_BYTES);
@@ -1673,6 +1743,8 @@ void setup() {
   FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, physCount);
   FastLED.setBrightness(gBrightness);
   FastLED.clear(true);
+
+  dht.begin();
 
   pinMode(PIR_PIN, INPUT_PULLDOWN);
 
@@ -1751,6 +1823,7 @@ void setup() {
 void loop() {
   server.handleClient();
   updateDeviceTime();
+  updateDht();
 
   static uint32_t lastSchedCheckMs = 0;
   uint32_t msNow = millis();
