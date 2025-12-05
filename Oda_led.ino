@@ -59,7 +59,7 @@ Serial.println("[EEPROM] Ayarlar kaydedildi.");
 
 #define LED_PIN 4
 #define PIR_PIN 13
-#define DHTPIN 4
+#define DHTPIN 16
 #define DHTTYPE DHT22
 #define LED_COLS 39
 #define LED_ROWS 16
@@ -67,6 +67,10 @@ Serial.println("[EEPROM] Ayarlar kaydedildi.");
 #define COLOR_ORDER BGR
 
 DHT dht(DHTPIN, DHTTYPE);
+
+float gTemp = 0;
+float gHum  = 0;
+uint32_t gLastDhtRead = 0;
 
 static const int INVALID = -1;
 
@@ -850,6 +854,14 @@ s += ",";
 
 s += "\"epoch\":";
 s += String(nowUtcSec());
+ 
+s += ",";
+s += "\"temp\":";
+s += String(gTemp);
+
+s += ",";
+s += "\"hum\":";
+s += String(gHum);
 
 s += "}";
 return s;
@@ -953,6 +965,25 @@ h1 {
  margin-bottom: 8px;
  flex-wrap: wrap;
  gap: 6px;
+}
+.top-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.top-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+.clock-badge {
+  min-width: 64px;
+  justify-content: center;
 }
 label {
  font-size: 0.85rem;
@@ -1086,16 +1117,20 @@ input[type="text"]:focus {
 id="statusBadge" class="badge">Bağlanıyor...</span></h2>
   
 <div class="row">
- <div class="top-controls">
-   <button id="btnPower">Güç</button>
-   <button id="btnPir">Sensör</button>
+  <div class="top-controls">
+    <button id="btnPower">Güç</button>
+    <button id="btnPir">Sensör</button>
 
-   <span id="pirState" class="badge">Hareket</span>
+    <span id="pirState" class="badge">Hareket</span>
 
-<span id="timeBadge" class="badge clock-badge">
- Saat: <span id="devTime">--:--</span>
-</span>
-</div>
+    <div class="top-right">
+      <span id="tempBadge" class="badge">🌡️ --.-°C</span>
+      <span id="humBadge"  class="badge">💧 --%</span>
+      <span id="timeBadge" class="badge clock-badge">
+        <span id="devTime">--:--</span>
+      </span>
+    </div>
+  </div>
 </div>
 
  <div class="card">
@@ -1236,6 +1271,23 @@ function updateFromState(st) {
  $("marquee").value = marqueeLevel;
  $("marqueeVal").textContent = "Seviye " + marqueeLevel + "/10";
 
+  const tempEl = $("tempBadge");
+  if (tempEl) {
+    if (typeof st.temp === "number") {
+      tempEl.textContent = "🌡️ " + st.temp.toFixed(1) + "°C";
+    } else {
+      tempEl.textContent = "🌡️ --.-°C";
+    }
+  }
+
+  const humEl = $("humBadge");
+  if (humEl) {
+    if (typeof st.hum === "number") {
+      humEl.textContent = "💧 " + Math.round(st.hum) + "%";
+    } else {
+      humEl.textContent = "💧 --%";
+    }
+}
  const autoInput = $("autoMinutes");
  if (autoInput && document.activeElement !== autoInput) {
    autoInput.value = Math.round(st.absence_ms / 60000);
@@ -1671,7 +1723,8 @@ sendJson200(jsonState());
 void setup() {
 Serial.begin(115200);
 delay(50);
-
+dht.begin();
+Serial.println("DHT22 Başlatıldı.");
 EEPROM.begin(EEPROM_SIZE_BYTES);
 
 buildMapping();
@@ -1756,7 +1809,17 @@ gLastMotionMs = millis();
 void loop() {
 server.handleClient();
 updateDeviceTime();
+ 
+if (millis() - gLastDhtRead >= 2000) {
+    gLastDhtRead = millis();
+    float t = dht.readTemperature();
+    float h = dht.readHumidity();
 
+    if (!isnan(t) && !isnan(h)) {
+        gTemp = t;
+        gHum = h;
+    }
+}
 static uint32_t lastSchedCheckMs = 0;
 uint32_t msNow = millis();
 
@@ -1885,7 +1948,6 @@ setXY(x,y,gSolidColor);
 
 } else {
 
-// hız adımı: gSpeed 1..400 → 1..8 arası hue adımı
 uint8_t hueStep = map(gSpeed, 1, 400, 1, 8);
 
 if (touchBoost) {
