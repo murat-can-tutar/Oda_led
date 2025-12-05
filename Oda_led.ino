@@ -9,11 +9,6 @@ const char* STA_PASS = "MCT.160324";
 #include <Update.h>
 #include <DHT.h>
 
-IPAddress local_IP(192,168,0,50);
-IPAddress gateway(192,168,0,1);
-IPAddress subnet(255,255,255,0);
-IPAddress dns(8,8,8,8);   
-
 extern uint32_t absenceOffMs;
 extern uint32_t restoreWindowMs;
 
@@ -33,9 +28,6 @@ struct Persist {
 
 void setupWifi() {
   WiFi.mode(WIFI_STA);
-
-  WiFi.config(local_IP, gateway, subnet, dns);
-
   WiFi.begin(STA_SSID, STA_PASS);
 
   uint32_t startAttempt = millis();
