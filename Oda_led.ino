@@ -978,11 +978,12 @@ h1 {
   display: flex;
   align-items: center;
   gap: 6px;
-  flex-wrap: nowrap;
 }
 
 .clock-badge {
-  min-width: 64px;
+  min-width: 60px;
+  text-align: center;
+  display: flex;
   justify-content: center;
 }
 label {
@@ -1111,27 +1112,24 @@ input[type="text"]:focus {
 </style>
 </head>
 <body>
-<div class="container">
+  <div class="container">
 
- <div class="card"><h2>Genel<span 
-id="statusBadge" class="badge">Bağlanıyor...</span></h2>
-  
-<div class="row">
-  <div class="top-controls">
-    <button id="btnPower">Güç</button>
-    <button id="btnPir">Sensör</button>
-
-    <span id="pirState" class="badge">Hareket</span>
-
-    <div class="top-right">
-      <span id="tempBadge" class="badge">🌡️ --.-°C</span>
-      <span id="humBadge"  class="badge">💧 --%</span>
-      <span id="timeBadge" class="badge clock-badge">
-        <span id="devTime">--:--</span>
-      </span>
+    <div class="general-header">
+      <h2>Genel</h2>
+      <div class="header-right">
+        <span id="tempBadge" class="badge">🌡️ --.-°C</span>
+        <span id="humBadge" class="badge">💧 --%</span>
+        <span id="devTime" class="badge clock-badge">--:--</span>
+      </div>
     </div>
-  </div>
-</div>
+
+    <span id="statusBadge" class="badge status">Bağlanıyor...</span>
+
+    <div class="top-controls">
+      <button id="btnPower">Güç</button>
+      <button id="btnPir">Sensör</button>
+      <span id="pirState" class="badge">Hareket</span>
+    </div>
 
  <div class="card">
    <h2>Efektler 🌈</h2>
