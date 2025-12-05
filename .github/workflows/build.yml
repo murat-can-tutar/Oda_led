@@ -29,6 +29,8 @@ jobs:
         run: |
           arduino-cli lib install FastLED
           arduino-cli lib install ESPAsyncWebServer || true
+          arduino-cli lib install "DHT sensor library"
+          arduino-cli lib install "Adafruit Unified Sensor"
 
       - name: Sketch derle (Oda_led.ino)
         run: |
