@@ -398,7 +398,7 @@ return;
 }
 
 inline uint16_t frameDelayMs() {
-return map(gSpeed, 1, 400, 60, 10);
+return map(gSpeed, 1, 10, 400, 5);
 }
 
 struct Glyph { uint8_t ch; uint8_t col[5]; };
@@ -1267,11 +1267,8 @@ function updateFromState(st) {
  const bPct = Math.round((st.brightness / 200) * 100);
  $("brightnessVal").textContent = bPct + "%";
 
- let speedLevel = Math.round(st.speed / 40);
- if (speedLevel < 1) speedLevel = 1;
- if (speedLevel > 10) speedLevel = 10;
- $("speed").value = speedLevel;
- $("speedVal").textContent = "Seviye " + speedLevel + "/10";
+ $("speed").value = st.speed;
+$("speedVal").textContent = "Seviye " + st.speed + "/10";
 
  let marqueeLevel = st.marqueespeed;
  if (marqueeLevel < 1) marqueeLevel = 1;
@@ -1390,9 +1387,8 @@ $("speed").addEventListener("input", (e) => {
  $("speedVal").textContent = "Seviye " + lvl + "/10";
 });
 $("speed").addEventListener("change", (e) => {
- const lvl = Number(e.target.value);
- const mapped = Math.min(400, Math.max(1, lvl * 40));
- fetch("/api/speed?value=" + mapped);
+  const lvl = Number(e.target.value);
+  fetch("/api/speed?value=" + lvl);
 });
 
 $("marquee").addEventListener("input", (e) => {
@@ -1956,7 +1952,7 @@ setXY(x,y,gSolidColor);
 
 } else {
 
-uint8_t hueStep = map(gSpeed, 1, 400, 1, 8);
+uint8_t hueStep = map(gSpeed, 1, 10, 1, 8);
 
 if (touchBoost) {
 for(uint8_t y=0;y<LED_ROWS;y++)
