@@ -1109,27 +1109,37 @@ input[type="text"]:focus {
    height: 28px;
    padding: 0 12px;
 }
+.status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
 </style>
 </head>
 <body>
   <div class="container">
 
-    <div class="general-header">
-      <h2>Genel</h2>
-      <div class="header-right">
-        <span id="tempBadge" class="badge">🌡️ --.-°C</span>
-        <span id="humBadge" class="badge">💧 --%</span>
-        <span id="devTime" class="badge clock-badge">--:--</span>
-      </div>
-    </div>
-
+    <div class="card">
+  <h2>Genel</h2>
+  <div class="status-row">
     <span id="statusBadge" class="badge status">Bağlanıyor...</span>
 
-    <div class="top-controls">
-      <button id="btnPower">Güç</button>
-      <button id="btnPir">Sensör</button>
-      <span id="pirState" class="badge">Hareket</span>
-    </div>
+<span id="envBadge" class="badge">
+    🌡 <span id="tempValue">--.-°C</span>
+    &nbsp;&nbsp; 💧 <span id="humValue">--%</span>
+</span>
+
+<span id="timeBadge" class="badge clock-badge">
+    <span id="devTime">--:--</span>
+</span>
+    
+  <div class="top-controls">
+    <button id="btnPower">Güç</button>
+    <button id="btnPir">Sensör</button>
+    <span id="pirState" class="badge">Hareket</span>
+  </div>
+</div>
 
  <div class="card">
    <h2>Efektler 🌈</h2>
@@ -1139,7 +1149,7 @@ input[type="text"]:focus {
        <option value="0">Rengarenk</option>
        <option value="1">İlüzyon</option>
        <option value="2">Dalga</option>
-       <option value="3">Yıldırım</option>
+       <option value="3"h>Yıldırım</option>
        <option value="4">Yıldız Kayması</option>
        <option value="5">Parıltı</option>
        <option value="6">Gökkuşağı</option>
