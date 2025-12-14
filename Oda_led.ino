@@ -59,20 +59,15 @@ Serial.println("[EEPROM] Ayarlar kaydedildi.");
 
 #define LED_PIN 4
 #define PIR_PIN 13
-#define DHTPIN 16
-#define DHTTYPE DHT22
 #define LED_COLS 39
 #define LED_ROWS 16
 #define LED_TYPE WS2812B
 #define COLOR_ORDER BGR
-
-DHT dht(DHTPIN, DHTTYPE);
-
-float gTemp = 0;
-float gHum  = 0;
-uint32_t gLastDhtRead = 0;
+#define DHT_PIN 14
+#define DHTTYPE DHT22
 
 static const int INVALID = -1;
+
 
 const uint32_t PIR_DELAY_MS = 60000;
 const uint8_t PIR_FADE_TARGET_BRIGHTNESS = 200;
@@ -122,6 +117,12 @@ return (uint8_t)v;
 CRGB* leds = nullptr;
 int physCount = 0;
 int* mapping = nullptr;
+
+DHT dht(DHT_PIN, DHTTYPE);
+float gTempC = NAN;
+float gHumPct = NAN;
+uint32_t gLastDhtReadMs = 0;
+
 
 void buildMapping() {
 if (mapping) free(mapping);
@@ -260,7 +261,7 @@ CRGB gSolidColor = CRGB::White;
 bool gPaused = false;
 uint8_t gLastUserBrightness = 140;
 
-String gText = "I LOVE YOU NAZAN";
+String gText = "I LOVE YOYO NAZAN";
 int gTextOffset = LED_COLS;
 uint8_t gTextHue = 0;
 uint8_t gMarqueeSpeed = 5;
@@ -398,7 +399,7 @@ return;
 }
 
 inline uint16_t frameDelayMs() {
-return map(gSpeed, 1, 10, 400, 5);
+return map(gSpeed, 1, 400, 60, 10);
 }
 
 struct Glyph { uint8_t ch; uint8_t col[5]; };
@@ -790,81 +791,81 @@ return out;
 }
 
 String jsonState() {
-String s = "{";
+  String s = "{";
 
-s += "\"power\":";
-s += (gPower ? "true" : "false");
-s += ",";
+  s += "\"power\":";
+  s += (gPower ? "true" : "false");
+  s += ",";
 
-s += "\"brightness\":";
-s += String(gBrightness);
-s += ",";
+  s += "\"brightness\":";
+  s += String(gBrightness);
+  s += ",";
 
-s += "\"speed\":";
-s += String(gSpeed);
-s += ",";
+  s += "\"speed\":";
+  s += String(gSpeed);
+  s += ",";
 
-s += "\"effect\":";
-s += String(gEffect);
-s += ",";
+  s += "\"effect\":";
+  s += String(gEffect);
+  s += ",";
 
-s += "\"solid\":";
-s += (gSolidMode ? "true" : "false");
-s += ",";
+  s += "\"solid\":";
+  s += (gSolidMode ? "true" : "false");
+  s += ",";
 
-s += "\"paused\":";
-s += (gPaused ? "true" : "false");
-s += ",";
+  s += "\"paused\":";
+  s += (gPaused ? "true" : "false");
+  s += ",";
 
-s += "\"text\":\"";
-s += escapeJson(gText);
-s += "\",";
+  s += "\"text\":\"";
+  s += escapeJson(gText);
+  s += "\",";
 
-s += "\"marqueespeed\":";
-s += String(gMarqueeSpeed);
-s += ",";
+  s += "\"marqueespeed\":";
+  s += String(gMarqueeSpeed);
+  s += ",";
 
-s += "\"absence_ms\":";
-s += String(absenceOffMs);
-s += ",";
+  s += "\"absence_ms\":";
+  s += String(absenceOffMs);
+  s += ",";
 
-s += "\"restore_ms\":";
-s += String(restoreWindowMs);
-s += ",";
+  s += "\"restore_ms\":";
+  s += String(restoreWindowMs);
+  s += ",";
 
-s += "\"pir\":";
-s += (digitalRead(PIR_PIN) == HIGH ? "true" : "false");
-s += ",";
+  s += "\"pir\":";
+  s += (digitalRead(PIR_PIN) == HIGH ? "true" : "false");
+  s += ",";
 
-s += "\"pir_enabled\":";
-s += (gPirEnabled ? "true" : "false");
-s += ",";
+  s += "\"pir_enabled\":";
+  s += (gPirEnabled ? "true" : "false");
+  s += ",";
 
-s += "\"tz_min\":";
-s += String(tzOffsetMin);
-s += ",";
+  s += "\"temp_c\":";
+  s += String(isnan(gTempC) ? 0.0 : gTempC, 1);
+  s += ",";
 
-s += "\"pir_on_min\":";
-s += String(pirOnMin);
-s += ",";
+  s += "\"hum\":";
+  s += String(isnan(gHumPct) ? 0.0 : gHumPct, 0);
+  s += ",";
 
-s += "\"pir_off_min\":";
-s += String(pirOffMin);
-s += ",";
+  s += "\"tz_min\":";
+  s += String(tzOffsetMin);
+  s += ",";
 
-s += "\"epoch\":";
-s += String(nowUtcSec());
- 
-s += ",";
-s += "\"temp\":";
-s += String(gTemp);
+  s += "\"pir_on_min\":";
+  s += String(pirOnMin);
+  s += ",";
 
-s += ",";
-s += "\"hum\":";
-s += String(gHum);
+  s += "\"pir_off_min\":";
+  s += String(pirOffMin);
+  s += ",";
 
-s += "}";
-return s;
+  s += "\"epoch\":";
+  s += String(nowUtcSec());
+
+  s += "}";
+  return s;
 }
 
 const char* OTA_PAGE = R"OTA(
@@ -955,9 +956,13 @@ h1 {
  box-shadow: 0 8px 16px rgba(0,0,0,0.4);
 }
 .card h2 {
- font-size: 1rem;
- margin: 0 0 8px 0;
+  font-size: 1rem;
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
+
 .row {
  display: flex;
  align-items: center;
@@ -965,26 +970,6 @@ h1 {
  margin-bottom: 8px;
  flex-wrap: wrap;
  gap: 6px;
-}
-.top-controls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-}
-
-.top-right {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.clock-badge {
-  min-width: 60px;
-  text-align: center;
-  display: flex;
-  justify-content: center;
 }
 label {
  font-size: 0.85rem;
@@ -1109,37 +1094,40 @@ input[type="text"]:focus {
    height: 28px;
    padding: 0 12px;
 }
-.status-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 8px;
+.clock-badge {
+   margin-left: auto;
 }
 </style>
 </head>
 <body>
-  <div class="container">
+<div class="container">
 
-    <div class="card">
-  <h2>Genel</h2>
-  <div class="status-row">
-    <span id="statusBadge" class="badge status">Bağlanıyor...</span>
+<div class="card">
+  <h2>
+    <span>
+      Genel
+      <span id="statusBadge" class="badge">Bağlanıyor...</span>
+    </span>
 
-<span id="envBadge" class="badge">
-    🌡 <span id="tempValue">--.-°C</span>
-    &nbsp;&nbsp; 💧 <span id="humValue">--%</span>
-</span>
+    <!-- SAAT: sağ üstte, sadece rakam -->
+    <span id="timeBadge" class="badge clock-badge">
+      <span id="devTime">--:--</span>
+    </span>
+  </h2>
 
-<span id="timeBadge" class="badge clock-badge">
-    <span id="devTime">--:--</span>
-</span>
-    
-  <div class="top-controls">
-    <button id="btnPower">Güç</button>
-    <button id="btnPir">Sensör</button>
-    <span id="pirState" class="badge">Hareket</span>
+  <div class="row">
+    <div class="top-controls">
+      <button id="btnPower">Güç</button>
+      <button id="btnPir">Sensör</button>
+
+      <span id="pirState" class="badge">Hareket</span>
+      <span id="envBadge" class="badge">🌡️ --.-°C    💧 --%</span>
+    </div>
   </div>
 </div>
+
+
+
 
  <div class="card">
    <h2>Efektler 🌈</h2>
@@ -1149,12 +1137,12 @@ input[type="text"]:focus {
        <option value="0">Rengarenk</option>
        <option value="1">İlüzyon</option>
        <option value="2">Dalga</option>
-       <option value="3"h>Yıldırım</option>
+       <option value="3">Yıldırım</option>
        <option value="4">Yıldız Kayması</option>
        <option value="5">Parıltı</option>
        <option value="6">Gökkuşağı</option>
        <option value="7">Flaş</option>
-       <option value="8">I LOVE YOU NAZAN</option>
+       <option value="8">I LOVE YOYO NAZAN</option>
      </select>
    </div>
    <div class="grid-buttons">
@@ -1267,8 +1255,12 @@ function updateFromState(st) {
  const bPct = Math.round((st.brightness / 200) * 100);
  $("brightnessVal").textContent = bPct + "%";
 
- $("speed").value = st.speed;
-$("speedVal").textContent = "Seviye " + st.speed + "/10";
+speedLevel = Math.round(st.speed / 20);
+if (speedLevel < 1) speedLevel = 1;
+if (speedLevel > 10) speedLevel = 10;
+$("speed").value = speedLevel;
+$("speedVal").textContent = "Seviye " + speedLevel + "/10";
+
 
  let marqueeLevel = st.marqueespeed;
  if (marqueeLevel < 1) marqueeLevel = 1;
@@ -1276,23 +1268,6 @@ $("speedVal").textContent = "Seviye " + st.speed + "/10";
  $("marquee").value = marqueeLevel;
  $("marqueeVal").textContent = "Seviye " + marqueeLevel + "/10";
 
-  const tempEl = $("tempBadge");
-  if (tempEl) {
-    if (typeof st.temp === "number") {
-      tempEl.textContent = "🌡️ " + st.temp.toFixed(1) + "°C";
-    } else {
-      tempEl.textContent = "🌡️ --.-°C";
-    }
-  }
-
-  const humEl = $("humBadge");
-  if (humEl) {
-    if (typeof st.hum === "number") {
-      humEl.textContent = "💧 " + Math.round(st.hum) + "%";
-    } else {
-      humEl.textContent = "💧 --%";
-    }
-}
  const autoInput = $("autoMinutes");
  if (autoInput && document.activeElement !== autoInput) {
    autoInput.value = Math.round(st.absence_ms / 60000);
@@ -1355,10 +1330,18 @@ $("speedVal").textContent = "Seviye " + st.speed + "/10";
    textMsg.placeholder = "Yazıyı Giriniz...";
  }
 
- const devStr = formatDeviceTime(st.epoch, st.tz_min || 0);
- const devTimeEl = $("devTime");
- if (devTimeEl) devTimeEl.textContent = devStr;
+  const devStr = formatDeviceTime(st.epoch, st.tz_min || 0);
+  const devTimeEl = $("devTime");
+  if (devTimeEl) devTimeEl.textContent = devStr;
+
+  const env = $("envBadge");
+  if (env && typeof st.temp_c === "number" && typeof st.hum === "number") {
+    const t = st.temp_c.toFixed(1);
+    const h = Math.round(st.hum);
+    env.textContent = "🌡️ " + t + "°C    💧 " + h + "%";
+  }
 }
+
 
 
 function refreshState() {
@@ -1387,8 +1370,9 @@ $("speed").addEventListener("input", (e) => {
  $("speedVal").textContent = "Seviye " + lvl + "/10";
 });
 $("speed").addEventListener("change", (e) => {
-  const lvl = Number(e.target.value);
-  fetch("/api/speed?value=" + lvl);
+ const lvl = Number(e.target.value);
+ const mapped = Math.min(200, Math.max(10, lvl * 20));
+ fetch("/api/speed?value=" + mapped);
 });
 
 $("marquee").addEventListener("input", (e) => {
@@ -1444,7 +1428,7 @@ $("btnSendText").addEventListener("click", () => {
 });
 
 $("btnResetOffset").addEventListener("click", () => {
- $("textMsg").value = "I LOVE YOU NAZAN";
+ $("textMsg").value = "I LOVE YOYO NAZAN";
  fetch("/api/resetoffset").then(() => setTimeout(refreshState, 200));
 });
 
@@ -1572,10 +1556,11 @@ sendJson200(jsonState());
 
 void handleSpeed() {
 if (server.hasArg("value")) {
-gSpeed = constrain(server.arg("value").toInt(), 1, 400);
+gSpeed = constrain(server.arg("value").toInt(), 10, 200);
 }
 sendJson200(jsonState());
 }
+
 
 void handleMarqueeSpeed() {
 if (server.hasArg("value")) {
@@ -1665,7 +1650,7 @@ sendJson200(jsonState());
 }
 
 void handleResetOffset() {
-gText = "I LOVE YOU NAZAN";
+gText = "I LOVE YOYO NAZAN";
 gTextOffset = LED_COLS;
 sendJson200(jsonState());
 }
@@ -1724,15 +1709,16 @@ pirOffMin = m;
 }
 sendJson200(jsonState());
 }
-void setup() {
-Serial.begin(115200);
-delay(50);
-dht.begin();
-Serial.println("DHT22 Başlatıldı.");
-EEPROM.begin(EEPROM_SIZE_BYTES);
+void setup(){
+  Serial.begin(115200);
+  delay(50);
 
-buildMapping();
-FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, physCount);
+  dht.begin();
+
+  EEPROM.begin(EEPROM_SIZE_BYTES);
+  buildMapping();
+  FastLED.addLeds<LED_TYPE,LED_PIN,COLOR_ORDER>(leds,physCount);
+
 FastLED.setBrightness(gBrightness);
 FastLED.clear(true);
 
@@ -1813,17 +1799,17 @@ gLastMotionMs = millis();
 void loop() {
 server.handleClient();
 updateDeviceTime();
- 
-if (millis() - gLastDhtRead >= 2000) {
-    gLastDhtRead = millis();
+
+  uint32_t nowMsDht = millis();
+  if (nowMsDht - gLastDhtReadMs >= 2000) {
+    gLastDhtReadMs = nowMsDht;
     float t = dht.readTemperature();
     float h = dht.readHumidity();
+    if (!isnan(t)) gTempC = t;
+    if (!isnan(h)) gHumPct = h;
+  }
 
-    if (!isnan(t) && !isnan(h)) {
-        gTemp = t;
-        gHum = h;
-    }
-}
+
 static uint32_t lastSchedCheckMs = 0;
 uint32_t msNow = millis();
 
@@ -1952,7 +1938,7 @@ setXY(x,y,gSolidColor);
 
 } else {
 
-uint8_t hueStep = map(gSpeed, 1, 10, 1, 8);
+uint8_t hueStep = map(gSpeed, 1, 400, 1, 8);
 
 if (touchBoost) {
 for(uint8_t y=0;y<LED_ROWS;y++)
