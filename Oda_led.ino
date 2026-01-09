@@ -82,6 +82,7 @@ bool gPirEnabled = true;
 uint32_t gIgnorePirUntilMs = 0;
 uint32_t gAutoOffRearmUntilMs = 0;
 bool gLastPirLevel = false;
+bool gHeater = false;
 
 int gRowOffsets[LED_ROWS] = {
 0, 0, 0, 2, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1
@@ -797,6 +798,10 @@ String jsonState() {
   s += (gPower ? "true" : "false");
   s += ",";
 
+  s += "\"heater\":";
+  s += (gHeater ? "true" : "false");
+  s += ",";
+  
   s += "\"brightness\":";
   s += String(gBrightness);
   s += ",";
@@ -1119,6 +1124,7 @@ input[type="text"]:focus {
     <div class="top-controls">
       <button id="btnPower">Güç</button>
       <button id="btnPir">Sensör</button>
+      <button id="btnHeater">Isıtıcı</button>
 
       <span id="pirState" class="badge">Hareket</span>
       <span id="envBadge" class="badge">🌡️ --.-°C    💧 --%</span>
@@ -1313,6 +1319,14 @@ $("speedVal").textContent = "Seviye " + speedLevel + "/10";
  }
 
  const btnPower = $("btnPower");
+const btnHeater = $("btnHeater");
+btnHeater.textContent = "Isıtıcı";
+btnHeater.className = "";
+if (st.heater) {
+  btnHeater.style.background = "#2563eb"; // mavi
+} else {
+  btnHeater.style.background = "#dc2626"; // kırmızı
+}
  if (btnPower) {
    btnPower.textContent = "Güç";
    btnPower.className = "";
@@ -1390,6 +1404,14 @@ $("effect").addEventListener("change", (e) => {
 
 $("btnPower").addEventListener("click", () => {
  apiGet("/api/state").then(st => {
+$("btnHeater").addEventListener("click", () => {
+  apiGet("/api/state").then(st => {
+    if (!st) return;
+    const nv = st.heater ? 0 : 1;
+    fetch("/api/heater?value=" + nv)
+      .then(() => setTimeout(refreshState, 200));
+  });
+});
    if (!st) return;
    const newVal = st.power ? 0 : 1;
    fetch("/api/power?value=" + newVal).then(() => setTimeout(refreshState, 200));
@@ -1763,7 +1785,12 @@ server.on("/api/auto", HTTP_GET, handleAuto);
 server.on("/api/pir", HTTP_GET, handlePirEnable);
 server.on("/api/settime", HTTP_GET, handleSetTime);
 server.on("/api/pirschedule", HTTP_GET, handlePirSchedule);
-
+server.on("/api/heater", HTTP_GET, []() {
+  if (server.hasArg("value")) {
+    gHeater = server.arg("value") == "1";
+  }
+  server.send(200, "application/json", "{\"ok\":true}");
+});
 server.on("/update", HTTP_GET, []() {
 server.send(200, "text/html", OTA_PAGE);
 });
