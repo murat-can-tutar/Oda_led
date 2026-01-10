@@ -1121,16 +1121,9 @@ input[type="text"]:focus {
       <button id="btnPir">Sensör</button>
 
       <span id="pirState" class="badge">Hareket</span>
-
-      <!-- Sıcaklık + Nem, aynı satırda -->
       <span id="envBadge" class="badge">🌡️ --.-°C    💧 --%</span>
     </div>
   </div>
-</div>
-
-
-<div class="row">
-  <span id="envBadge" class="badge">🌡️ --.-°C    💧 --%</span>
 </div>
 
  <div class="card">
