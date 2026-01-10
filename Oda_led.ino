@@ -261,7 +261,7 @@ CRGB gSolidColor = CRGB::White;
 bool gPaused = false;
 uint8_t gLastUserBrightness = 140;
 
-String gText = "I LOVE YOU NAZAN";
+String gText = "MURAT CAN";
 int gTextOffset = LED_COLS;
 uint8_t gTextHue = 0;
 uint8_t gMarqueeSpeed = 5;
@@ -1146,7 +1146,7 @@ input[type="text"]:focus {
        <option value="5">Parıltı</option>
        <option value="6">Gökkuşağı</option>
        <option value="7">Flaş</option>
-       <option value="8">I LOVE YOU NAZAN</option>
+       <option value="8">MURAT CAN</option>
      </select>
    </div>
    <div class="grid-buttons">
@@ -1432,7 +1432,7 @@ $("btnSendText").addEventListener("click", () => {
 });
 
 $("btnResetOffset").addEventListener("click", () => {
- $("textMsg").value = "I LOVE YOU NAZAN";
+ $("textMsg").value = "MURAT CAN";
  fetch("/api/resetoffset").then(() => setTimeout(refreshState, 200));
 });
 
@@ -1654,7 +1654,7 @@ sendJson200(jsonState());
 }
 
 void handleResetOffset() {
-gText = "I LOVE YOU NAZAN";
+gText = "MURAT CAN";
 gTextOffset = LED_COLS;
 sendJson200(jsonState());
 }
