@@ -5,9 +5,8 @@
 #include <math.h>
 #include <WiFiClient.h>
 #include <Update.h>
-#include <DHT.h>
+#include <DHT.h> 
 
-extern uint32_t absenceOffMs;
 extern uint32_t restoreWindowMs;
 
 #define EEPROM_SIZE_BYTES 64
@@ -16,13 +15,31 @@ extern uint32_t restoreWindowMs;
 #define EE_ADDR_RTC_TZMIN (EE_ADDR_BASE + 36)
 
 struct Persist {
-uint32_t magic;
-uint32_t version;
-uint32_t absenceMs;
-uint32_t restoreMs;
-uint32_t checksum;
-uint32_t gIgnorePirUntilMs;
+  uint32_t magic;
+  uint32_t version;
+  uint32_t absenceMs;
+  uint32_t restoreMs;
+  int16_t  pOn; 
+  int16_t  pOff;
+  bool     rAuto;
+  float    rThr;
+  uint32_t checksum;
 };
+
+uint32_t absenceOffMs = 60000;
+uint32_t restoreWindowMs = 600000;
+int16_t pirOnMin = -1;
+int16_t pirOffMin = -1;
+bool relayStatus = false;
+bool relayAutoMode = false;
+float tempThreshold = 25.0;
+int relayOnline = 0;
+uint32_t lastRelayCheckMs = 0;
+const char* nodeMcuIP = "192.168.4.50";
+
+static inline uint32_t persistChecksum(const Persist& p) {
+  return (p.magic ^ p.version ^ p.absenceMs ^ (uint32_t)p.pOn ^ (uint32_t)p.rThr ^ 0xA5A5A5A5UL);
+}
 
 static const uint32_t PERSIST_MAGIC = 0x4D43544C;
 static const uint32_t PERSIST_VERSION = 1;
@@ -34,28 +51,7 @@ return (p.magic ^ p.version ^ p.absenceMs ^ p.restoreMs ^ 0xA5A5A5A5UL);
 uint32_t absenceOffMs = 60000;
 uint32_t restoreWindowMs = 600000;
 
-static inline void loadPersist() {
-Persist p{};
-EEPROM.get(EE_ADDR_BASE, p);
-if (p.magic == PERSIST_MAGIC && p.version == PERSIST_VERSION && p.checksum == persistChecksum(p)) {
-if (p.absenceMs >= 60000UL && p.absenceMs <= 600000UL) absenceOffMs = p.absenceMs;
-Serial.println("[EEPROM] Ayarlar yüklendi.");
-} else {
-Serial.println("[EEPROM] Ilk kurulu/geçersiz veri. Varsayılanlar yazılıyor...");
-Persist np{PERSIST_MAGIC, PERSIST_VERSION, absenceOffMs, restoreWindowMs, 0, 0};
-np.checksum = persistChecksum(np);
-EEPROM.put(EE_ADDR_BASE, np);
-EEPROM.commit();
-}
-}
 
-static inline void savePersist() {
-Persist p{PERSIST_MAGIC, PERSIST_VERSION, absenceOffMs, restoreWindowMs, 0, 0};
-p.checksum = persistChecksum(p);
-EEPROM.put(EE_ADDR_BASE, p);
-EEPROM.commit();
-Serial.println("[EEPROM] Ayarlar kaydedildi.");
-}
 
 #define LED_PIN 4
 #define PIR_PIN 13
@@ -75,6 +71,25 @@ const uint8_t PIR_FADE_TARGET_BRIGHTNESS = 200;
 uint32_t gLastPirSampleMs = 0;
 uint32_t gLastMotionMs = 0;
 static uint32_t pirHighStarted = 0;
+void savePersist() {
+  Persist p{0x4D434231, 1, absenceOffMs, restoreWindowMs, pirOnMin, pirOffMin, relayAutoMode, tempThreshold, 0};
+  p.checksum = persistChecksum(p);
+  EEPROM.put(0, p);
+  EEPROM.commit();
+}
+
+void loadPersist() {
+  Persist p;
+  EEPROM.get(0, p);
+  if (p.magic == 0x4D434231 && p.checksum == persistChecksum(p)) {
+    absenceOffMs = p.absenceMs;
+    pirOnMin = p.pOn;
+    pirOffMin = p.pOff;
+    relayAutoMode = p.rAuto;
+    tempThreshold = p.rThr;
+  }
+}
+ 
 const uint16_t PIR_DEBOUNCE_MS = 80;
 const uint16_t PIR_HOLD_MS = 300;
 
@@ -495,6 +510,26 @@ setXY(x_draw, y_draw, color);
 }
 }
 }
+void controlNodeMCU(String command) {
+  WiFiClient client;
+  if (client.connect(nodeMcuIP, 80)) {
+    client.print(String("GET /") + command + " HTTP/1.1\r\nHost: " + nodeMcuIP + "\r\nConnection: close\r\n\r\n");
+    relayStatus = (command == "ac");
+    relayOnline = 1;
+  } else { relayOnline = 0; }
+}
+
+void checkRelayLogic() {
+  if (millis() - lastRelayCheckMs > 5000) {
+    lastRelayCheckMs = millis();
+    if (relayAutoMode && !isnan(gTempC)) {
+      if (gTempC >= tempThreshold && !relayStatus) controlNodeMCU("ac");
+      else if (gTempC < (tempThreshold - 1.0) && relayStatus) controlNodeMCU("kapat");
+    }
+    WiFiClient c; 
+    relayOnline = c.connect(nodeMcuIP, 80) ? 1 : 0;
+  }
+}
 
 void drawString(int x, int y, const String& s, CRGB base) {
 const int CHAR_SPACING = 8;
@@ -792,78 +827,28 @@ return out;
 
 String jsonState() {
   String s = "{";
-
-  s += "\"power\":";
-  s += (gPower ? "true" : "false");
-  s += ",";
-
-  s += "\"brightness\":";
-  s += String(gBrightness);
-  s += ",";
-
-  s += "\"speed\":";
-  s += String(gSpeed);
-  s += ",";
-
-  s += "\"effect\":";
-  s += String(gEffect);
-  s += ",";
-
-  s += "\"solid\":";
-  s += (gSolidMode ? "true" : "false");
-  s += ",";
-
-  s += "\"paused\":";
-  s += (gPaused ? "true" : "false");
-  s += ",";
-
-  s += "\"text\":\"";
-  s += escapeJson(gText);
-  s += "\",";
-
-  s += "\"marqueespeed\":";
-  s += String(gMarqueeSpeed);
-  s += ",";
-
-  s += "\"absence_ms\":";
-  s += String(absenceOffMs);
-  s += ",";
-
-  s += "\"restore_ms\":";
-  s += String(restoreWindowMs);
-  s += ",";
-
-  s += "\"pir\":";
-  s += (digitalRead(PIR_PIN) == HIGH ? "true" : "false");
-  s += ",";
-
-  s += "\"pir_enabled\":";
-  s += (gPirEnabled ? "true" : "false");
-  s += ",";
-
-  s += "\"temp_c\":";
-  s += String(isnan(gTempC) ? 0.0 : gTempC, 1);
-  s += ",";
-
-  s += "\"hum\":";
-  s += String(isnan(gHumPct) ? 0.0 : gHumPct, 0);
-  s += ",";
-
-  s += "\"tz_min\":";
-  s += String(tzOffsetMin);
-  s += ",";
-
-  s += "\"pir_on_min\":";
-  s += String(pirOnMin);
-  s += ",";
-
-  s += "\"pir_off_min\":";
-  s += String(pirOffMin);
-  s += ",";
-
-  s += "\"epoch\":";
-  s += String(nowUtcSec());
-
+  s += "\"power\":" + String(gPower ? "true" : "false");
+  s += ",\"brightness\":" + String(gBrightness);
+  s += ",\"speed\":" + String(gSpeed);
+  s += ",\"effect\":" + String(gEffect);
+  s += ",\"solid\":" + String(gSolidMode ? "true" : "false");
+  s += ",\"paused\":" + String(gPaused ? "true" : "false");
+  s += ",\"text\":\"" + escapeJson(gText) + "\"";
+  s += ",\"marqueespeed\":" + String(gMarqueeSpeed);
+  s += ",\"absence_ms\":" + String(absenceOffMs);
+  s += ",\"restore_ms\":" + String(restoreWindowMs);
+  s += ",\"pir\":" + String(digitalRead(PIR_PIN) == HIGH ? "true" : "false");
+  s += ",\"pir_enabled\":" + String(gPirEnabled ? "true" : "false");
+  s += ",\"temp_c\":" + String(isnan(gTempC) ? 0.0 : gTempC, 1);
+  s += ",\"hum\":" + String(isnan(gHumPct) ? 0.0 : gHumPct, 0);
+  s += ",\"p_on\":" + String(pirOnMin);
+  s += ",\"p_off\":" + String(pirOffMin);
+  s += ",\"relay_st\":" + String(relayStatus ? 1 : 0);
+  s += ",\"relay_auto\":" + String(relayAutoMode ? 1 : 0);
+  s += ",\"relay_onl\":" + String(relayOnline);
+  s += ",\"relay_thr\":" + String(tempThreshold, 1);
+  s += ",\"epoch\":" + String(nowUtcSec());
+  s += ",\"tz_min\":" + String(tzOffsetMin);
   s += "}";
   return s;
 }
@@ -1104,14 +1089,10 @@ input[type="text"]:focus {
 
 <div class="card">
   <h2>
-    <span>
-      Genel
-      <span id="statusBadge" class="badge">Bağlanıyor...</span>
-    </span>
-
-    <!-- SAAT: sağ üstte, sadece rakam -->
-    <span id="timeBadge" class="badge clock-badge">
-      <span id="devTime">--:--</span>
+    <span>Sistem <span id="statusBadge" class="badge">Bağlanıyor...</span></span>
+    <span style="display:flex; gap:8px; align-items:center; margin-left:auto;">
+       <span id="envBadge" style="font-size:0.8rem; font-weight:bold;">🌡️ --.-°C 💧 --%</span>
+       <span id="timeBadge" class="badge"><span id="devTime">--:--</span></span>
     </span>
   </h2>
 
@@ -1119,7 +1100,10 @@ input[type="text"]:focus {
     <div class="top-controls">
       <button id="btnPower">Güç</button>
       <button id="btnPir">Sensör</button>
-
+      <button id="btnRelay">Isıtıcı</button>
+    </div>
+  </div>
+</div>
       <span id="pirState" class="badge">Hareket</span>
       <span id="envBadge" class="badge">🌡️ --.-°C    💧 --%</span>
     </div>
@@ -1201,315 +1185,89 @@ input[type="text"]:focus {
      <label for="offTime">Kapanış Saati</label>
      <input id="offTime" type="time" />
    </div>
-   <div class="grid-buttons">
-     <button id="btnSetSchedule">Kaydet</button>
-     <button id="btnSyncTime" class="secondary">Saati Eşitle</button>
-   </div>
- </div>
 
- <div class="footer">
-   <div>• Designed and Programmed by Murat Can TUTAR •</div>
-   <div class="footer-buttons">
-     <button id="btnOta" class="secondary">Sistem Güncelleme</button>
-   </div>
- </div>
-</div>
-
-<script>
+<div class="card">
+  <script>
 const $ = (id) => document.getElementById(id);
 
 function apiGet(path) {
- return fetch(path, { cache: "no-store" })
-   .then(r => r.json())
-   .catch(() => null);
+  return fetch(path, { cache: "no-store" }).then(r => r.json()).catch(() => null);
 }
 
-function formatDeviceTime(epoch, tzMin) {
- if (!epoch) return "--:--";
- const localSec = epoch + (tzMin * 60);
- const d = new Date(localSec * 1000);
- const hh = d.getUTCHours().toString().padStart(2, "0");
- const mm = d.getUTCMinutes().toString().padStart(2, "0");
- return hh + ":" + mm;
+function minToTime(min) {
+  if (min === null || min < 0) return "";
+  const h = Math.floor(min / 60).toString().padStart(2, "0");
+  const m = (min % 60).toString().padStart(2, "0");
+  return h + ":" + m;
+}
+
+function timeToMin(t) {
+  if (!t) return -1;
+  const p = t.split(":");
+  return parseInt(p[0]) * 60 + parseInt(p[1]);
 }
 
 function updateFromState(st) {
- if (!st) return;
-
- function minutesToHHMM(min) {
-   if (min == null || min < 0) return "";
-   const h = Math.floor(min / 60);
-   const m = min % 60;
-   return String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
- }
-
- if ($("statusBadge").textContent !== "Bağlandı") {
-   $("statusBadge").textContent = "Bağlandı";
-   $("statusBadge").style.background = "#2563eb";
- }
-
- $("brightness").value = st.brightness;
- const bPct = Math.round((st.brightness / 200) * 100);
- $("brightnessVal").textContent = bPct + "%";
-
-speedLevel = Math.round(st.speed / 20);
-if (speedLevel < 1) speedLevel = 1;
-if (speedLevel > 10) speedLevel = 10;
-$("speed").value = speedLevel;
-$("speedVal").textContent = "Seviye " + speedLevel + "/10";
-
-
- let marqueeLevel = st.marqueespeed;
- if (marqueeLevel < 1) marqueeLevel = 1;
- if (marqueeLevel > 10) marqueeLevel = 10;
- $("marquee").value = marqueeLevel;
- $("marqueeVal").textContent = "Seviye " + marqueeLevel + "/10";
-
- const autoInput = $("autoMinutes");
- if (autoInput && document.activeElement !== autoInput) {
-   autoInput.value = Math.round(st.absence_ms / 60000);
- }
-
- const onInput = $("onTime");
- if (onInput &&
-     typeof st.pir_on_min === "number" &&
-     st.pir_on_min >= 0 &&
-     document.activeElement !== onInput) {
-   onInput.value = minutesToHHMM(st.pir_on_min);
- }
-
- const offInput = $("offTime");
- if (offInput &&
-     typeof st.pir_off_min === "number" &&
-     st.pir_off_min >= 0 &&
-     document.activeElement !== offInput) {
-   offInput.value = minutesToHHMM(st.pir_off_min);
- }
-
- $("effect").value = st.effect;
-
- const pirState = $("pirState");
- if (pirState) {
-   pirState.textContent = "Hareket";
-   if (st.pir) {
-     pirState.style.background = "#2563eb";
-   } else {
-     pirState.style.background = "#1e293b";
-   }
- }
-
- const btnPir = $("btnPir");
- if (btnPir) {
-   btnPir.textContent = "Sensör";
-   btnPir.className = "";
-   if (st.pir_enabled) {
-     btnPir.style.background = "#16a34a";
-   } else {
-     btnPir.style.background = "#dc2626";
-   }
- }
-
- const btnPower = $("btnPower");
- if (btnPower) {
-   btnPower.textContent = "Güç";
-   btnPower.className = "";
-   if (st.power) {
-     btnPower.style.background = "#16a34a";
-   } else {
-     btnPower.style.background = "#dc2626";
-   }
- }
-
- $("btnPlay").textContent = st.paused ? "Devam Et" : "Durdur";
-
- const textMsg = $("textMsg");
- if (textMsg) {
-   textMsg.placeholder = "Yazıyı Giriniz...";
- }
-
-  const devStr = formatDeviceTime(st.epoch, st.tz_min || 0);
-  const devTimeEl = $("devTime");
-  if (devTimeEl) devTimeEl.textContent = devStr;
-
-  const env = $("envBadge");
-  if (env && typeof st.temp_c === "number" && typeof st.hum === "number") {
-    const t = st.temp_c.toFixed(1);
-    const h = Math.round(st.hum);
-    env.textContent = "🌡️ " + t + "°C    💧 " + h + "%";
+  if (!st) return;
+  // Saat ve Sıcaklık
+  if ($("devTime")) $("devTime").textContent = formatDeviceTime(st.epoch, st.tz_min);
+  if ($("envBadge")) $("envBadge").textContent = `🌡️ ${st.temp_c.toFixed(1)}°C  💧 ${st.hum}%`;
+  
+  // Buton Renkleri
+  $("btnPower").style.background = st.power ? "#16a34a" : "#dc2626";
+  $("btnPir").style.background = st.pir_enabled ? "#16a34a" : "#dc2626";
+  
+  // Röle/Isıtıcı Butonu
+  const btnR = $("btnRelay");
+  if(st.relay_onl == 0) {
+    btnR.textContent = "Bağlantı Yok";
+    btnR.style.background = "#6b7280";
+  } else {
+    btnR.style.background = st.relay_st == 1 ? "#16a34a" : "#dc2626";
+    btnR.textContent = st.relay_st == 1 ? "Isıtıcı: AÇIK" : "Isıtıcı: KAPALI";
   }
+
+  // Ayarların Kutulara Yazılması
+  $("btnRelayMode").textContent = st.relay_auto == 1 ? "OTOMATİK" : "MANUEL";
+  $("relayTemp").value = st.relay_thr;
+  $("onTime").value = minToTime(st.p_on);
+  $("offTime").value = minToTime(st.p_off);
+  $("autoMinutes").value = Math.round(st.absence_ms / 60000);
+  $("brightness").value = st.brightness;
+  $("effect").value = st.effect;
 }
 
-
-
-function refreshState() {
- apiGet("/api/state").then(st => {
-   if (!st) {
-     
-     $("statusBadge").textContent = "Bağlanıyor...";
-     $("statusBadge").style.background = "#1e293b";
-     return;
-   }
-   updateFromState(st);
- });
-}
-$("brightness").addEventListener("input", (e) => {
- const v = Number(e.target.value);
- $("brightnessVal").textContent = Math.round((v / 200) * 100) + "%";
-});
-
-$("brightness").addEventListener("change", (e) => {
- const v = e.target.value;
- fetch("/api/brightness?value=" + v);
-});
-
-$("speed").addEventListener("input", (e) => {
- const lvl = Number(e.target.value);
- $("speedVal").textContent = "Seviye " + lvl + "/10";
-});
-$("speed").addEventListener("change", (e) => {
- const lvl = Number(e.target.value);
- const mapped = Math.min(200, Math.max(10, lvl * 20));
- fetch("/api/speed?value=" + mapped);
-});
-
-$("marquee").addEventListener("input", (e) => {
- const lvl = Number(e.target.value);
- $("marqueeVal").textContent = "Seviye " + lvl + "/10";
-});
-$("marquee").addEventListener("change", (e) => {
- const lvl = Number(e.target.value);
- fetch("/api/marqueespeed?value=" + lvl);
-});
-$("effect").addEventListener("change", (e) => {
- const v = Number(e.target.value);
- fetch("/api/set?effect=" + v).then(() => setTimeout(refreshState, 200));
-});
-
-$("btnPower").addEventListener("click", () => {
- apiGet("/api/state").then(st => {
-   if (!st) return;
-   const newVal = st.power ? 0 : 1;
-   fetch("/api/power?value=" + newVal).then(() => setTimeout(refreshState, 200));
- });
-});
-
-$("btnPir").addEventListener("click", () => {
- apiGet("/api/state").then(st => {
-   if (!st) return;
-   const en = st.pir_enabled ? 0 : 1;
-   fetch("/api/pir?enable=" + en).then(() => setTimeout(refreshState, 200));
- });
-});
-
-$("btnSolidWhite").addEventListener("click", () => fetch("/api/solid?color=white").then(refreshState));
-$("btnSolidRed"  ).addEventListener("click", () => fetch("/api/solid?color=red"  ).then(refreshState));
-$("btnSolidGreen").addEventListener("click", () => fetch("/api/solid?color=green").then(refreshState));
-$("btnSolidBlue" ).addEventListener("click", () => fetch("/api/solid?color=blue" ).then(refreshState));
-
-$("btnPlay").addEventListener("click", () => {
- apiGet("/api/state").then(st => {
-   if (!st) return;
-   const nv = st.paused ? 0 : 1;
-   fetch("/api/play?value=" + nv).then(() => setTimeout(refreshState, 200));
- });
-});
-
-$("btnNextFx").addEventListener("click", () => {
- fetch("/api/solid?color=none").then(() => setTimeout(refreshState, 200));
-});
-
-$("btnSendText").addEventListener("click", () => {
- const msg = $("textMsg").value || "";
- const enc = encodeURIComponent(msg);
- fetch("/api/text?msg=" + enc).then(() => setTimeout(refreshState, 300));
-});
-
-$("btnResetOffset").addEventListener("click", () => {
- $("textMsg").value = "MURAT CAN";
- fetch("/api/resetoffset").then(() => setTimeout(refreshState, 200));
-});
-
-$("btnSetSchedule").addEventListener("click", () => {
- const onT = $("onTime").value;
- const offT = $("offTime").value;
- const absM = $("autoMinutes").value || "1";
-
- let qs = "/api/auto?abs=" + encodeURIComponent(absM);
- fetch(qs).then(() => {
-   let q2 = "/api/pirschedule?";
-   const parts = [];
-   if (onT)  parts.push("on="  + encodeURIComponent(onT));
-   if (offT) parts.push("off=" + encodeURIComponent(offT));
-   q2 += parts.join("&");
-   if (parts.length > 0) {
-     fetch(q2).then(() => setTimeout(refreshState, 400));
-   } else {
-     setTimeout(refreshState, 200);
-   }
- });
-});
-
-$("btnSyncTime").addEventListener("click", () => {
- const epoch = Math.floor(Date.now() / 1000);
- const tzmin = -new Date().getTimezoneOffset();
- const url = "/api/settime?epoch=" + epoch + "&tzmin=" + tzmin;
- fetch(url).then(() => setTimeout(refreshState, 300));
-});
-
-$("btnOta").addEventListener("click", () => {
- window.location.href = "/update";
-});
-
-(function(){
- const pad = $("touchpad");
-let active = false;
-let lastTouchSend = 0;
-const TOUCH_INTERVAL = 40;
-
-function sendTouch(evt){
- const now = performance.now();
- if (now - lastTouchSend < TOUCH_INTERVAL) return;
- lastTouchSend = now;
-
- const rect = pad.getBoundingClientRect();
- const x = (evt.touches ? evt.touches[0].clientX : evt.clientX) - rect.left;
- const y = (evt.touches ? evt.touches[0].clientY : evt.clientY) - rect.top;
- const nx = Math.min(Math.max(x / rect.width, 0), 1);
- const ny = Math.min(Math.max(y / rect.height, 0), 1);
- fetch("/api/touch?x=" + nx + "&y=" + ny);
+function formatDeviceTime(epoch, tzMin) {
+  if (!epoch) return "--:--";
+  const d = new Date((epoch + (tzMin * 60)) * 1000);
+  return d.getUTCHours().toString().padStart(2,"0") + ":" + d.getUTCMinutes().toString().padStart(2,"0");
 }
 
- pad.addEventListener("mousedown", (e) => {
-   active = true;
-   sendTouch(e);
- });
+// KAYDET BUTONU
+$("btnSetSchedule").onclick = () => {
+  const onT = timeToMin($("onTime").value);
+  const offT = timeToMin($("offTime").value);
+  const rT = $("relayTemp").value;
+  const absM = $("autoMinutes").value;
 
- pad.addEventListener("mousemove", (e) => {
-   if (!active) return;
-   sendTouch(e);
- });
+  fetch(`/api/pirschedule?on=${onT}&off=${offT}`)
+    .then(() => fetch(`/api/relay?settemp=${rT}`))
+    .then(() => fetch(`/api/auto?abs=${absM}`))
+    .then(() => { alert("Ayarlar Kaydedildi!"); refreshState(); });
+};
 
- window.addEventListener("mouseup", () => active = false);
+// DİĞER BUTONLAR
+$("btnPower").onclick = () => fetch("/api/power?value=toggle").then(refreshState);
+$("btnPir").onclick = () => fetch("/api/pir?enable=toggle").then(refreshState);
+$("btnRelay").onclick = () => fetch("/api/relay?cmd=toggle").then(refreshState);
+$("btnRelayMode").onclick = () => {
+    const isAuto = $("btnRelayMode").textContent === "MANUEL" ? 1 : 0;
+    fetch(`/api/relay?auto=${isAuto}`).then(refreshState);
+};
 
- pad.addEventListener("touchstart", (e) => {
-   active = true;
-   sendTouch(e);
-   e.preventDefault();
- }, {passive:false});
-
- pad.addEventListener("touchmove", (e) => {
-   if (!active) return;
-   sendTouch(e);
-   e.preventDefault();
- }, {passive:false});
-
- pad.addEventListener("touchend", () => {
-   active = false;
- });
-})();
-
-refreshState();
+function refreshState() { apiGet("/api/state").then(updateFromState); }
 setInterval(refreshState, 3000);
+refreshState();
 </script>
 </body></html>
 )HTML";
@@ -1786,6 +1544,13 @@ Update.end(true);
 server.onNotFound([]() {
 server.send(404, "text/plain", "Not found");
 });
+server.on("/api/relay", HTTP_GET, []() {
+  if (server.hasArg("cmd")) controlNodeMCU(server.arg("cmd"));
+  if (server.hasArg("auto")) relayAutoMode = (server.arg("auto").toInt() == 1);
+  if (server.hasArg("settemp")) tempThreshold = server.arg("settemp").toFloat();
+  savePersist();
+  sendJson200(jsonState());
+});
 
 server.begin();
 
@@ -1795,6 +1560,7 @@ gLastMotionMs = millis();
 
 void loop() {
 server.handleClient();
+checkRelayLogic(); 
 updateDeviceTime();
 
   uint32_t nowMsDht = millis();
