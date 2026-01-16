@@ -7,8 +7,6 @@
 #include <Update.h>
 #include <DHT.h> 
 
-extern uint32_t restoreWindowMs;
-
 #define EEPROM_SIZE_BYTES 64
 #define EE_ADDR_BASE 0
 #define EE_ADDR_RTC_EPOCH (EE_ADDR_BASE + 32)
@@ -43,15 +41,6 @@ static inline uint32_t persistChecksum(const Persist& p) {
 
 static const uint32_t PERSIST_MAGIC = 0x4D43544C;
 static const uint32_t PERSIST_VERSION = 1;
-
-static inline uint32_t persistChecksum(const Persist& p) {
-return (p.magic ^ p.version ^ p.absenceMs ^ p.restoreMs ^ 0xA5A5A5A5UL);
-}
-
-uint32_t absenceOffMs = 60000;
-uint32_t restoreWindowMs = 600000;
-
-
 
 #define LED_PIN 4
 #define PIR_PIN 13
@@ -342,8 +331,6 @@ uint32_t deviceEpoch = 0;
 uint32_t deviceEpochSetAtMs = 0;
 int32_t tzOffsetMin = 180;
 
-int16_t pirOnMin = -1;
-int16_t pirOffMin = -1;
 int32_t schedDayIndex = -1;
 bool appliedOnToday = false;
 bool appliedOffToday = false;
