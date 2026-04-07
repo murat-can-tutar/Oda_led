@@ -31,6 +31,7 @@ jobs:
           arduino-cli lib install ESPAsyncWebServer || true
           arduino-cli lib install "DHT sensor library"
           arduino-cli lib install "Adafruit Unified Sensor"
+          arduino-cli lib install "ESP32Servo"
 
       - name: Sketch derle (Oda_led.ino)
         run: |
